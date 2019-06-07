@@ -1,0 +1,82 @@
+Fit Details - Discrete Fit
+------------------
+Type of the data ( [histogram] or [times] ):
+times
+---
+What is the [BinWidth](double)
+0.02
+---
+If type of data is times is it from ( [oscilloscope], [digitizer] or [other] )
+digitizer
+------------------
+Histogram details:
+LastBin is the last bin that have counts more than X(integer)
+8
+FirstBin is the first bin that have counts more than X(integer)
+8
+Background estimated from the X number of bins(integer)
+100
+Background estimated from the [right] or [left] side of the histogram
+right
+Leave X bins at the end of histogram from the Background estimation(integer)
+30
+End of Fit range in ns(double)
+40
+Start of Fit range as the fraction of the histogram amplitude(double)
+0.3
+First Bin Center - For the sake of drawing(double)
+0
+Do You want to fix the resolution component(yes/no)
+no
+------------------
+Resolution Components estimated as Gauss distributions
+Sigma(double)[ns]	Intensity(from 0 to 1, all sum up to 1)
+0.1	1
+-------	----------
+Lifetime Components
+Types description(nf-all free, f-lifetime and intensity fixed)
+Types description(pf-lifetime is partially free, lpf-pf+intensity partially free)
+Types description(lf-lifetime fixed, lff-lf+intensity partially free)
+Types description(ps-this component would be the fraction of all o-Ps intensities)
+Lifetime	Intensity(from 0 to 1, all sum up to 1)		Type
+0.125	0.3	nf
+0.374	0.1	f
+0.3	0.5	nf
+2	0.1	nf
+-------	----- ----
+Number of iterations for fitting(integer)
+3
+How much partially fixed parameter can vary (in percent of value)(double)
+5
+------------------
+Fit Details - Continous Fit
+------------------
+Do You want to deconvolute distribution (yes/no)
+no
+How dense points should be on LifetimeGrid (higher value - denser)(double)
+250
+LifetimeGrid start value(in percent of Min Lifetime from discrete)(double)
+20
+LifetimeGrid end value(multiplicity of Max Lifetime from discrete)(double)
+45
+From where continous fit should start(as the shift from maximum)(int)
+5
+From how many point histogram should be smoothed(linear filter)(int)
+5
+Range of fit end(multiplicity of Max Lifetime from discrete)(double)
+20
+Default value of sigmas in fitting (percent of lifetime)(double)
+10
+Start value of step in first step of continous fit(double)
+1
+Number of first step iteration to check condition(int)
+10
+Start value of step in second step of continous fit(double)
+1
+Number of second step iteration to check condition(int)
+30
+Shape of the Components ([Gaussian], [LogGaussian] or [Mixed])
+LogGaussian
+Do You want to use experimental Background fitting (yes/no)
+yes
+------------------
