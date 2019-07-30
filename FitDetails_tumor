@@ -6,6 +6,8 @@ Name of the directory in ROOT file, if not ROOT file or in main diretory write [
 none
 Name of the histogram in directory in ROOT file, if not ROOT file write [none]
 none
+Name of the file for serial analysis if not applicable write [no]
+no
 ---
 What is the [BinWidth](double)
 0.02

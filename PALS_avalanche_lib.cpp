@@ -35,7 +35,7 @@ Fit::Fit()
 
 Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType )
 {							//Getting Times and fitting details from file provided by user and FitDetails file
-    TypeOfFit = FitType;
+	TypeOfFit = FitType;
 //-----------------------------------------------Clearing the variables used in the process of analysis of PAL spectrum
 //-----------------------------------------------(Because reasons and to be sure that it is blank)
 	Path = path;
@@ -63,7 +63,7 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	iterator = 0;
 	ChiDiffBetweenIterations = 0.;
 //-----------------------------------------------
-    fileTools(pathForDetails);
+	fileTools(pathForDetails);
 	if( fileTools.FileCheck( pathForDetails ) )
 	{
 		std::cout << "FitDetails file visible" << std::endl;
@@ -85,73 +85,107 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 		std::cout << "Fix this or the program have no chance to work" << std::endl;
 		return;
 	}
-    st::vector<std::string> DataAsString = fileTools.GetFitDetails();
-    if( DataAsString[0] != "" ) // Zero element is the eroor indicator
-    {
-        std::cout << DataAsString[0] << std::endl;
-        return;
-    }
-    TypeOfData = DataAsString[2]; // Second element is the multiplicity of Resolution and Lifetime components
-    ROOTDirectory = DataAsString[3];
-    ROOTHistogram = DataAsString[4];
-    BinWidth = stod( DataAsString[5] );
-    TypeOfDataExtended = DataAsString[6];
-    LastBinMinValue = stoi( DataAsString[7] );
-    FirstBinMinValue = stoi( DataAsString[8] );
-	BackgroundEstimationNumbOfPoints = stoi( DataAsString[9] );
-	SideOfBackgroundEstimation = DataAsString[10];
-	ShiftForBackgroundEstimation = stoi( DataAsString[11] );
-	EndOfFitValue = stod( DataAsString[12] );
-	StartOfFitValue = stod( DataAsString[13] );
-	FirstBinCenter = stod( DataAsString[14] );// - BinWidth/2;
-	LastBinCenter = stod( DataAsString[15] );// - BinWidth/2;
-	FixGauss = DataAsString[16];
+	std::vector<std::string> DataAsString = fileTools.GetFitDetails();
+	if( DataAsString[0] != "" ) // Zero element is the error indicator
+	{
+		std::cout << DataAsString[0] << std::endl;
+		return;
+	}
+	unsigned lineNumber = 2;
+	TypeOfData = DataAsString[lineNumber]; // Second element is the multiplicity of Resolution and Lifetime components
+	lineNumber++;
+	ROOTDirectory = DataAsString[lineNumber];
+	lineNumber++;
+	ROOTHistogram = DataAsString[lineNumber];
+	lineNumber++;
+	NameOfTheFileForEXCEL = DataAsString[lineNumber];
+	lineNumber++;
+	BinWidth = stod( DataAsString[lineNumber] );
+	lineNumber++;
+	TypeOfDataExtended = DataAsString[lineNumber];
+	lineNumber++;
+	LastBinMinValue = stoi( DataAsString[lineNumber] );
+	lineNumber++;
+	FirstBinMinValue = stoi( DataAsString[lineNumber] );
+	lineNumber++;
+	BackgroundEstimationNumbOfPoints = stoi( DataAsString[lineNumber] );
+	lineNumber++;
+	SideOfBackgroundEstimation = DataAsString[lineNumber];
+	lineNumber++;
+	ShiftForBackgroundEstimation = stoi( DataAsString[lineNumber] );
+	lineNumber++;
+	EndOfFitValue = stod( DataAsString[lineNumber] );
+	lineNumber++;
+	StartOfFitValue = stod( DataAsString[lineNumber] );
+	lineNumber++;
+	FirstBinCenter = stod( DataAsString[lineNumber] );// - BinWidth/2;
+	lineNumber++;
+	LastBinCenter = stod( DataAsString[lineNumber] );// - BinWidth/2;
+	lineNumber++;
+	FixGauss = DataAsString[lineNumber];
+	lineNumber++;
     
-    std::vector<int> ComponentsMultiplicites = fileTools.GetComponentsMultiplicities( DataAsString[1] );
-    int ComponentsShift = ComponentsMultiplicites[0] + ComponentsMultiplicites[1];
-    if( ComponentsMultiplicites[0]*ComponentsMultiplicites[1] == 0 )
-    {
-        std::cout << "Nor Resolution or Lifetime Components" << std::endl;
-        return;
-    }
-    std::vector<double> ComponentsDetails;
-    for( int i=0; i<ComponentsMultiplicites[0]; i++ )
-    {
-        ComponentsDetails = GetComponentDetails( DataAsString[17+i] ); 
-        Resolution.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), "gauss" ) );
-    }
-    for( int i=0; i<ComponentsMultiplicites[1]; i++ )
-    {
-        ComponentsDetails = GetComponentDetails( DataAsString[17+ComponentsMultiplicites[0]+i] ); 
-        Lifetimes.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), ComponentsDetails[2]) );
-    }
-    
-    NmbrOfIterations = stoi( DataAsString[17+ComponentsShift] );
-    VarLvl = stod( DataAsString[18+ComponentsShift] )/100;
-    DecoOption = stoi( DataAsString[19+ComponentsShift] );
-    Scaler = stod( DataAsString[20+ComponentsShift] );
-    FracMinLF = stod( DataAsString[21+ComponentsShift] )/100.;
-    FracMaxLF = stod( DataAsString[22+ComponentsShift] );
-    MaxShiftForDeco = stoi( DataAsString[23+ComponentsShift] );
-    LinFilterRange = stoi( DataAsString[24+ComponentsShift] );
-    EndOfFitMultiplicity = stod( DataAsString[25+ComponentsShift] );
-    SigmasDefaultFraction = stod( DataAsString[26+ComponentsShift] )/100.;
-    StepForPreIteration = stod( DataAsString[27+ComponentsShift] );
-    NumberOfPreIterations = stoi( DataAsString[28+ComponentsShift] );
-    StepForIteration = stod( DataAsString[29+ComponentsShift] );
-    NumberOfIterations = stoi( DataAsString[30+ComponentsShift] );
-    ShapeOfComponent = DataAsString[31+ComponentsShift];
-    TypeOfContinousFit = stoi( DataAsString[32+ComponentsShift] );
-    
-    int ErrorTest = RenormalizeComponentsIntensities();
-    if( ErrorTest )
-    {
-        Resolution.clear();
-        return;
-    }
-    SortLifetimesByType();
-    
-    GetHistogramToVector( path, ROOTFileTest );
+	std::vector<int> ComponentsMultiplicites = fileTools.GetComponentsMultiplicities( DataAsString[1] );
+	int ComponentsShift = ComponentsMultiplicites[0] + ComponentsMultiplicites[1];
+	if( ComponentsMultiplicites[0]*ComponentsMultiplicites[1] == 0 )
+	{
+		std::cout << "Nor Resolution or Lifetime Components" << std::endl;
+		return;
+	}
+	std::vector<double> ComponentsDetails;
+	for( int i=0; i<ComponentsMultiplicites[0]; i++ )
+	{
+		ComponentsDetails = GetComponentDetails( DataAsString[17+i] ); 
+		Resolution.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), "gauss" ) );
+	}
+	for( int i=0; i<ComponentsMultiplicites[1]; i++ )
+	{
+		ComponentsDetails = GetComponentDetails( DataAsString[17+ComponentsMultiplicites[0]+i] ); 
+		Lifetimes.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), ComponentsDetails[2]) );
+	}
+	
+	NmbrOfIterations = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	VarLvl = stod( DataAsString[lineNumber+ComponentsShift] )/100;
+	lineNumber++;
+	DecoOption = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	Scaler = stod( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	FracMinLF = stod( DataAsString[lineNumber+ComponentsShift] )/100.;
+	lineNumber++;
+	FracMaxLF = stod( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	MaxShiftForDeco = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	LinFilterRange = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	EndOfFitMultiplicity = stod( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	SigmasDefaultFraction = stod( DataAsString[lineNumber+ComponentsShift] )/100.;
+	lineNumber++;
+	StepForPreIteration = stod( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	NumberOfPreIterations = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	StepForIteration = stod( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	NumberOfIterations = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	ShapeOfComponent = DataAsString[lineNumber+ComponentsShift];
+	lineNumber++;
+	TypeOfContinousFit = stoi( DataAsString[lineNumber+ComponentsShift] );
+	lineNumber++;
+	
+	int ErrorTest = RenormalizeComponentsIntensities();
+	if( ErrorTest )
+	{
+		Resolution.clear();
+		return;
+	}
+	SortLifetimesByType();
+	
+	GetHistogramToVector( path, ROOTFileTest );
 }
 
 void Fit::RangeBackgroundData()
@@ -160,7 +194,7 @@ void Fit::RangeBackgroundData()
 	{
 		return;
 	}
-    std::cout<<"-------------Preparing data-------------"<<std::endl;
+	std::cout<<"-------------Preparing data-------------"<<std::endl;
 	TH1F* histogram;		//Histogram to fit
 	if( ! NmbOfBins )  // If the data is from oscilloscope or digitizer NmbOfBins is equal to 0, if one would like to change range of histogram change te second, third, and fourth argument in Fill Histogram below
 	{
@@ -232,7 +266,7 @@ void Fit::RangeBackgroundData()
 			Range_To = BinMax + iterator;
 		}
 	}	
-    std::cout << "Max bin in [Argument] [Value]\t \t \t \t \t \t" << Arguments[BinMax] << "   " << Values[BinMax] << std::endl;
+	std::cout << "Max bin in [Argument] [Value]\t \t \t \t \t \t" << Arguments[BinMax] << "   " << Values[BinMax] << std::endl;
 	std::cout << "[Beginning of the range - Bin] [End of the range - Bin] \t \t" << Range_From << "   " << Range_To << std::endl;
 	std::cout << "[Beginning of the range - Argument] [End of the range - Argument] \t" << Arguments[Range_From] << "   " << Arguments[Range_To] << std::endl;
 	std::cout << "[Beginning of the range - Value] [End of the range - Value] \t \t" << Values[Range_From] << "   " << Values[Range_To] << std::endl;
@@ -247,6 +281,8 @@ void Fit::RangeBackgroundData()
 		Path.erase( Path.begin(), Path.begin() + slashPlace + 1);
 	}
 	PathWithDate = Path + "_Date:" + GetTime();
+	if( NameOfTheFileForEXCEL == "no" )
+		NameOfTheFileForEXCEL = Path;
 }
 
 int Fit::Discrete()
@@ -255,7 +291,7 @@ int Fit::Discrete()
 	{
 		return 0;
 	}
-    std::cout<<"-------------Fitting data-------------"<<std::endl;
+	std::cout<<"-------------Fitting data-------------"<<std::endl;
 	std::cout << "[Argument for LastBin] [Argument for FirstBin] \t" << Arguments[LastBin] << "   " << Arguments[FirstBin] << std::endl;
 
 //---------------------------------------Range of drawing histogram with fit on it. first two lines is default, next to lines is for setting by user, if strict range is needed
@@ -281,7 +317,7 @@ int Fit::Discrete()
 	histogram -> SetLineWidth( 2 );
 	histogram -> SetLineColor( 1 );
 //---------------------------------------Setting the fit function
-    int lastbin = LastBin; 
+	int lastbin = LastBin; 
 	int firstbin = FirstBin;
 	while( histogram -> GetBinCenter( lastbin ) > Arguments[ Range_To ] )
 	{
@@ -307,39 +343,39 @@ int Fit::Discrete()
 			pPsIndex = i;
 	}
 
-    FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), oPsLFLimit );
-    
-    fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
-    fitTools.generateParameter( 0, Background, "Number of Gauss resolution components", Background - 3*SDBackground, Background + 3*SDBackground, "NoFixing" );
-    fitTools.generateParameter( 1, Resolution.size(), "Number of Gauss resolution components", 0., 0., "Fix" );
-    fitTools.generateParameter( 2, Lifetimes.size(), "Number of Lifetimes components", 0., 0., "Fix" );
-    fitTools.generateParameter( 3, area, "Total area of components", 0., 0., "NoLimits" );
-    fitTools.generateResolutionParameter( 4, Resolution, FixGauss, Arguments[ BinMax ] );
-    fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
+	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), oPsLFLimit );
+	
+	fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
+	fitTools.generateParameter( 0, Background, "Number of Gauss resolution components", Background - 3*SDBackground, Background + 3*SDBackground, "NoFixing" );
+	fitTools.generateParameter( 1, Resolution.size(), "Number of Gauss resolution components", 0., 0., "Fix" );
+	fitTools.generateParameter( 2, Lifetimes.size(), "Number of Lifetimes components", 0., 0., "Fix" );
+	fitTools.generateParameter( 3, area, "Total area of components", 0., 0., "NoLimits" );
+	fitTools.generateResolutionParameter( 4, Resolution, FixGauss, Arguments[ BinMax ] );
+	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
 	TF1 *Discrete = FitTools.getFitFunction();
     
-    histogram -> Fit(Discrete,"RM");
+	histogram -> Fit(Discrete,"RM");
 	std::cout << std::endl;
 	std::cout <<"Do not look on intensities of completely free parameters and resolution intensities"<< std::endl;
 	std::cout <<"They are normalized in the body of fitting function and at the end when saving results"<< std::endl;
 	std::cout << std::endl;
     
-    for( unsigned iteration = 0; iteration < NmbrOfIterations; iter++ )
+	for( unsigned iteration = 0; iteration < NmbrOfIterations; iter++ )
 	{
-        fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, Discrete, iter, VarLvl );
-        Discrete = FitTools.getFitFunction();
-        
-        histogram -> Fit(Discrete,"RM");
+		fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, Discrete, iter, VarLvl );
+		Discrete = FitTools.getFitFunction();
+		
+		histogram -> Fit(Discrete,"RM");
 		std::cout << std::endl;
 		std::cout <<"Do not look on intensities of completely free parameters and resolution intensities"<< std::endl;
 		std::cout <<"They are normalized in the body of fitting function and at the end when saving results"<< std::endl;
 		std::cout << std::endl;
-    }
+	}
     
-    ResultsSaver Results( TypeOfFit );
-    Results.saveDiscreteFit( histogram, Discrete, "Results_from_fit.root", Path, "Results", PathWithDate );
-    
-    AreaFromDiscrete = Discrete -> GetParameter( 3 );
+	ResultsSaver Results( TypeOfFit );
+	Results.saveDiscreteFit( histogram, Discrete, "Results_from_fit.root", Path, "Results", PathWithDate );
+	
+	//AreaFromDiscrete = Discrete -> GetParameter( 3 );	If neede in future can be uncommented !?|?!
 	Background = Discrete -> GetParameter( 0 );
 	Double_t ResolutionsFromFit[22]; //Maximal number of Resolution component is 10 -> 20 parameters + tempfirst + numberofresolutioncomponents
 	ResolutionsFromFit[0] = 1;
@@ -385,18 +421,18 @@ int Fit::Discrete()
 		else if( Lifetimes[i].Type != "ps" )
 		{
 			AfterFitIterator++;
-            if( TypeOfFit == "" )
-            {
-                FreeIntensities += GetIntensityParameterNew( FreeParameters, 3, 3, AfterFitIterator );
-                if( Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*i ) > oPsLFLimit && pPsIndex >=0 )
-                    FreeIntensitiesTopPs += GetIntensityParameterNew( FreeParameters, 3, 3, AfterFitIterator );
-            }
-            else
-            {
-                FreeIntensities += Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );
-                if( Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*i ) > oPsLFLimit && pPsIndex >=0 )
-                    FreeIntensitiesTopPs += Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );                
-            }
+			if( TypeOfFit == "" )
+			{
+				FreeIntensities += GetIntensityParameterNew( FreeParameters, 3, 3, AfterFitIterator );
+				if( Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*i ) > oPsLFLimit && pPsIndex >=0 )
+					FreeIntensitiesTopPs += GetIntensityParameterNew( FreeParameters, 3, 3, AfterFitIterator );
+			}
+			else
+			{
+				FreeIntensities += Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );
+				if( Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*i ) > oPsLFLimit && pPsIndex >=0 )
+					FreeIntensitiesTopPs += Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );                
+			}
 		}
 	}
 	FixedIntensities += pPsIntensity;
@@ -405,14 +441,16 @@ int Fit::Discrete()
 	{
 		pPsIntensity += Discrete -> GetParameter( 5 + 3*Resolution.size() )*FreeIntensitiesTopPs*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*Resolution.size() ) );
 	}
-    
-    std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete = Results.saveDiscreteFitResultsToTXT( Path, "Discrete_Fit_", PathWithDate, 
-                                                            Discrete, Background, SDBackground, ResolutionsFromFit, ResolutionsFromFitErrors, 
-                                                            pPsIndex, pPsIntensity, FreeParameters, FreeParametersErrors, 
-                                                            FixedIntensities, FreeIntensitiesTopPs, FixedFixedIntensity, Lifetimes );
-    Results.saveDiscreteFitResultsToEXCEL();
-    
-    return DecoOption;
+	
+	std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete = Results.saveDiscreteFitResultsToTXTandExcel( Path, "Discrete_Fit_", PathWithDate, 
+								Discrete, Background, SDBackground, ResolutionsFromFit, ResolutionsFromFitErrors, 
+								pPsIndex, pPsIntensity, FreeParameters, FreeParametersErrors, 
+								FixedIntensities, FreeIntensitiesTopPs, FixedFixedIntensity, Lifetimes, 
+								oPsLFLimit, pPsLFLimit, NameOfTheFileForEXCEL);
+	Results.saveResiduals( histogram, Arguments[ Range_From ], Arguments[ Range_To ], Range_From, Range_To, Discrete, "Residuals.root", Path, PathWithDate );
+	Results.saveLFvsIntensities( "LF_vs_In.root", Path, PathWithDate, ResultsDiscrete[0], ResultsDiscrete[1] );
+	
+	return DecoOption;
 }
 
 int Fit::RenormalizeComponentsIntensities()
@@ -535,124 +573,128 @@ void Fit::SortLifetimesByType()
 
 void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 {
-    std::cout << "-------------Getting data-------------" << std::endl;
-    std::ifstream data;		//Stream for path to data
-    std::string count = "";		//For oscilloscope
-    std::string time = "";		//Proper string
-    std::string risetime1 = "";	//For oscilloscope
-    std::string risetime2 = "";	//For oscilloscope
-    
-    if( ROOTFileTest ) //Indicator that there is ROOT file given to the program
-    {
-        TFile* file1 = new TFile( path.c_str(), "READ" );
-        TDirectory *dir;
-        if( ROOTDirectory != "none" )
-            file1->GetObject(ROOTDirectory,dir);
-        TH1D* histo1 = (TH1D*) dir->Get( ROOTHistogram.c_str() );
-        
-        double BinWidthOfHisto = histo1->GetBinCenter(2) - histo1->GetBinCenter(1);     //Leaving Underflow bin -> 0
-        if( BinWidth < BinWidthOfHisto )
-        {
-            std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::cout;
-            std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
-            return;
-        }
-        else
-        {
-            double RebinNumber = BinWidth/BinWidthOfHisto;
-            double decimals = RebinNumber % 1;
-            if( decimals > 0.01 )
-            {
-                std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::cout;
-                std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
-                return;               
-            }
-            std::cout << "Rebinning of the histogram by " << (int)RebinNumber << std::endl;
-            histo1 -> Rebin( (int)RebinNumber );
-        }
-        
-        for( int i=0; i<histo1->GetXaxis()->GetNbins(); i++ )
-        {
-            Times.push_back( histo1->GetBinContent(i) );
-            NmbOfBins++;
-        }
+	std::cout << "-------------Getting data-------------" << std::endl;
+	std::ifstream data;		//Stream for path to data
+	std::string count = "";		//For oscilloscope
+	std::string time = "";		//Proper string
+	std::string risetime1 = "";	//For oscilloscope
+	std::string risetime2 = "";	//For oscilloscope
+	
+	if( ROOTFileTest ) //Indicator that there is ROOT file given to the program
+	{
+		TFile* file1 = new TFile( path.c_str(), "READ" );
+		TDirectory *dir;
+		if( ROOTDirectory != "none" )
+			file1->GetObject(ROOTDirectory,dir);
+		
+		TH1D* histo1 = (TH1D*) dir->Get( ROOTHistogram.c_str() );
+		
+		double BinWidthOfHisto = histo1->GetBinCenter(2) - histo1->GetBinCenter(1);     //Leaving Underflow bin -> 0
+		if( BinWidth < BinWidthOfHisto )
+		{
+			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::cout;
+			std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
+			return;
+		}
+		else
+		{
+			double RebinNumber = BinWidth/BinWidthOfHisto;
+			double decimals = RebinNumber % 1;
+			if( decimals > 0.01 )
+			{
+				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::cout;
+				std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
+				return;               
+			}
+			std::cout << "Rebinning of the histogram by " << (int)RebinNumber << std::endl;
+			histo1 -> Rebin( (int)RebinNumber );
+		}
+		
+		for( int i=0; i<histo1->GetXaxis()->GetNbins(); i++ )
+		{
+			Times.push_back( histo1->GetBinContent(i) );
+			NmbOfBins++;
+		}
 
-        //FirstBinCenter = histo1->GetBinCenter(0);
-        
-        file1->Close();
-        std::cout << "Number of Bins " << NmbOfBins << std::endl;
-        if( NmbOfBins )						//Checking if provided by user details about the fit is correct
-        {							//NmbOfBins must be greater than BackgroundEstimationNumbOfPoints and ShiftForBackgroundEstimation
-            if( NmbOfBins < BackgroundEstimationNumbOfPoints + ShiftForBackgroundEstimation )
-            {
-                std::cout << "Number Of Bins can not be smaller than number of points for background calculations" << std::endl;
-                std::cout << "or Number fo points left in background calculations or their sum" << std::endl;
-                Resolution.clear();
-                Lifetimes.clear();
-            }
-            else if( NmbOfBins*BinWidth < EndOfFitValue )
-            {
-                std::cout << "Number of Points * BinWidth " << NmbOfBins*BinWidth << std::endl;
-                std::cout << "End of the range of the fit should not be greater than maximal value of histogram " << std::endl;
-                Resolution.clear();
-                Lifetimes.clear();
-            }
-        }
-        data.close();
-    }
-    else
-    {
-        data.open( ( Path ).c_str() );
+		//FirstBinCenter = histo1->GetBinCenter(0);
+		
+		file1->Close();
+		std::cout << "Number of Bins " << NmbOfBins << std::endl;
+		if( NmbOfBins )						//Checking if provided by user details about the fit is correct
+		{							//NmbOfBins must be greater than BackgroundEstimationNumbOfPoints and ShiftForBackgroundEstimation
+			if( NmbOfBins < BackgroundEstimationNumbOfPoints + ShiftForBackgroundEstimation )
+			{
+				std::cout << "Number Of Bins can not be smaller than number of points for background calculations" << std::endl;
+				std::cout << "or Number fo points left in background calculations or their sum" << std::endl;
+				Resolution.clear();
+				Lifetimes.clear();
+			}
+			else if( NmbOfBins*BinWidth < EndOfFitValue )
+			{
+				std::cout << "Number of Points * BinWidth " << NmbOfBins*BinWidth << std::endl;
+				std::cout << "End of the range of the fit should not be greater than maximal value of histogram " << std::endl;
+				Resolution.clear();
+				Lifetimes.clear();
+			}
+		}
+		data.close();
+	}
+	else
+	{
+		data.open( ( Path ).c_str() );
 
-        if( TypeOfData == "histogram" )
-        {
-            while( data >> time )	//other
-            {
-                if( time != "inf" && time != "nan"){
-                Times.push_back( stod(time) );
-                NmbOfBins++;
-                }
-            }
-        }
-        else
-        {  
-            if( TypeOfDataExtended == "oscilloscope" )
-            {
-                    while( data >> count >> time >> risetime1 >> risetime2 )
-                    {
-                        if( time != "inf" && time != "nan"){
-                        Times.push_back( stod(time) );
-                        }		
-                    }
-            }
-            else			//digitizer
-            {
-                while( data >> time )
-                        {
-                                if( time != "inf" && time != "nan"){
-                                    Times.push_back( stod(time) );
-                                }
-                        }
-            }
-        }
-        std::cout << "Number of Bins " << NmbOfBins << std::endl;
-        if( NmbOfBins )						//Checking if provided by user details about the fit is correct
-        {							//NmbOfBins must be greater than BackgroundEstimationNumbOfPoints and ShiftForBackgroundEstimation
-            if( NmbOfBins < BackgroundEstimationNumbOfPoints + ShiftForBackgroundEstimation )
-            {
-                std::cout << "Number Of Bins can not be smaller than number of points for background calculations" << std::endl;
-                std::cout << "or Number fo points left in background calculations or their sum" << std::endl;
-                Resolution.clear();
-                Lifetimes.clear();
-            }
-            else if( NmbOfBins*BinWidth < EndOfFitValue )
-            {
-                std::cout << "Number of Points * BinWidth " << NmbOfBins*BinWidth << std::endl;
-                std::cout << "End of the range of the fit should not be greater than maximal value of histogram " << std::endl;
-                Resolution.clear();
-                Lifetimes.clear();
-            }
-        }
-        data.close();
-    }
+		if( TypeOfData == "histogram" )
+		{
+			while( data >> time )	//other
+			{
+				if( time != "inf" && time != "nan")
+				{
+					Times.push_back( stod(time) );
+					NmbOfBins++;
+				}
+			}
+		}
+		else
+		{  
+			if( TypeOfDataExtended == "oscilloscope" )
+			{
+				while( data >> count >> time >> risetime1 >> risetime2 )
+				{
+					if( time != "inf" && time != "nan")
+					{
+						Times.push_back( stod(time) );
+					}		
+				}
+			}
+			else			//digitizer
+			{
+				while( data >> time )
+				{
+					if( time != "inf" && time != "nan")
+					{
+						Times.push_back( stod(time) );
+					}
+				}
+			}
+		}
+		std::cout << "Number of Bins " << NmbOfBins << std::endl;
+		if( NmbOfBins )						//Checking if provided by user details about the fit is correct
+		{							//NmbOfBins must be greater than BackgroundEstimationNumbOfPoints and ShiftForBackgroundEstimation
+			if( NmbOfBins < BackgroundEstimationNumbOfPoints + ShiftForBackgroundEstimation )
+			{
+				std::cout << "Number Of Bins can not be smaller than number of points for background calculations" << std::endl;
+				std::cout << "or Number fo points left in background calculations or their sum" << std::endl;
+				Resolution.clear();
+				Lifetimes.clear();
+			}
+			else if( NmbOfBins*BinWidth < EndOfFitValue )
+			{
+				std::cout << "Number of Points * BinWidth " << NmbOfBins*BinWidth << std::endl;
+				std::cout << "End of the range of the fit should not be greater than maximal value of histogram " << std::endl;
+				Resolution.clear();
+				Lifetimes.clear();
+			}
+		}
+		data.close();
+	}
 }

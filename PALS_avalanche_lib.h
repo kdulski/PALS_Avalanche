@@ -30,15 +30,16 @@
 #include <TF12.h>
 #include <TGraphErrors.h>
 #include "TFile.h"
-#define  ARMA_DONT_USE_WRAPPER
-#define  ARMA_USE_LAPACK
-#include <armadillo>
+//#define  ARMA_DONT_USE_WRAPPER
+//#define  ARMA_USE_LAPACK
+//#include <armadillo>
 #include <time.h>
 
 #include <PALS_avalanche_fileTools.h>
 #include <PALS_avalanche_fitFunctions.h>
 
 #define oPsLFLimit 0.7
+#define pPsLFLimit 0.2
 
 using namespace arma;
 
@@ -68,14 +69,15 @@ class DiscreteFitResult
 class Fit
 {
 	public:
-        FileTools fileTools;
-        std::string TypeOfFit;
+		FileTools fileTools;
+		std::string TypeOfFit;
         
 		std::string Path;
 		std::string PathWithDate;
 		std::string TypeOfData;
-        std::string ROOTDirectory;
-        std::string ROOTHistogram;
+		std::string ROOTDirectory;
+		std::string ROOTHistogram;
+		std::string NameOfTheFileForEXCEL;
 		std::string TypeOfDataExtended;
 		double BinWidth;
 		unsigned LastBinMinValue;
@@ -141,9 +143,9 @@ class Fit
 
 		Fit();
 		Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType );
-        int RenormalizeComponentsIntensities();
+		int RenormalizeComponentsIntensities();
 		void SortLifetimesByType();
-        void GetHistogramToVector( std::string path, int ROOTFileTest )
+		void GetHistogramToVector( std::string path, int ROOTFileTest )
 		void LinearFilter( unsigned FilterRange );
 		void RangeBackgroundData();
 		int Discrete();

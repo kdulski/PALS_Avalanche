@@ -2,142 +2,142 @@
 
 FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResolutionCompv, double oPsLFLimitValue )
 {
-    oPsLFLimit = oPsLFLimitValue;
-    if( Approach == "" )
-    {
-        if( pPsOption ) // pPs option equal t zero means that there is pPs
-        {
-            SelectedFunction = DiscreteFitFunctionNoPs;
-        }
-        else
-        {
-            SelectedFunction = DiscreteFitFunctionPs;
-        }
-    }
-    else if( Approach == "exp" )
-    {
-        if( pPsOption >= 0 ) // pPs option equal t zero means that there is pPs
-        {
-            if( NumberOfResolutionComp == 1 )
-            {
-                SelectedFunction = DiscreteFitFunctionNoPs_exp_1;               
-            }
-            else if( NumberOfResolutionComp == 2 )
-            {
-                SelectedFunction = DiscreteFitFunctionNoPs_exp_2;  
-            }
-            else if( NumberOfResolutionComp == 3 )
-            {
-                SelectedFunction = DiscreteFitFunctionNoPs_exp_3;  
-            }
-            else 
-            {
-                SelectedFunction = NULL;
-            }
-        }
-        else
-        {
-            if( NumberOfResolutionComp == 1 )
-            {
-                SelectedFunction = DiscreteFitFunctionPs_exp_1;               
-            }
-            else if( NumberOfResolutionComp == 2 )
-            {
-                SelectedFunction = DiscreteFitFunctionPs_exp_2;  
-            }
-            else if( NumberOfResolutionComp == 3 )
-            {
-                SelectedFunction = DiscreteFitFunctionPs_exp_3;  
-            }
-            else 
-            {
-                SelectedFunction = NULL;
-            }
-        }
-    }
-    else
-    {
-        if( pPsOption >= 0 ) // pPs option equal t zero means that there is pPs
-        {
-            SelectedFunction = DiscreteFitFunctionNoPs_old;
-        }
-        else
-        {
-            SelectedFunction = DiscreteFitFunctionPs_old;
-        }        
-    }
+	oPsLFLimit = oPsLFLimitValue;
+	if( Approach == "" )
+	{
+		if( pPsOption ) // pPs option equal t zero means that there is pPs
+		{
+			SelectedFunction = DiscreteFitFunctionNoPs;
+		}
+		else
+		{
+			SelectedFunction = DiscreteFitFunctionPs;
+		}
+	}
+	else if( Approach == "exp" )
+	{
+		if( pPsOption >= 0 ) // pPs option equal t zero means that there is pPs
+		{
+			if( NumberOfResolutionComp == 1 )
+			{
+				SelectedFunction = DiscreteFitFunctionNoPs_exp_1;               
+			}
+			else if( NumberOfResolutionComp == 2 )
+			{
+				SelectedFunction = DiscreteFitFunctionNoPs_exp_2;  
+			}
+			else if( NumberOfResolutionComp == 3 )
+			{
+				SelectedFunction = DiscreteFitFunctionNoPs_exp_3;  
+			}
+			else 
+			{
+				SelectedFunction = NULL;
+			}
+		}
+		else
+		{
+			if( NumberOfResolutionComp == 1 )
+			{
+				SelectedFunction = DiscreteFitFunctionPs_exp_1;               
+			}
+			else if( NumberOfResolutionComp == 2 )
+			{
+				SelectedFunction = DiscreteFitFunctionPs_exp_2;  
+			}
+			else if( NumberOfResolutionComp == 3 )
+			{
+				SelectedFunction = DiscreteFitFunctionPs_exp_3;  
+			}
+			else 
+			{
+				SelectedFunction = NULL;
+			}
+		}
+	}
+	else
+	{
+		if( pPsOption >= 0 ) // pPs option equal t zero means that there is pPs
+		{
+			SelectedFunction = DiscreteFitFunctionNoPs_old;
+		}
+		else
+		{
+			SelectedFunction = DiscreteFitFunctionPs_old;
+		}        
+	}
 }
 
 void FitFunction::generateFitFunction( double HistoStart, double HistoEnd, unsigned NumberOfParameters, double NumberOfPointsForDrawing )
 {
-    Discrete = new TF1( "Discrete", SelectedFunction, HistoStart, HistoEnd, NumberOfParameters );
-    Discrete -> SetNpx( NumberOfPointsForDrawing );
+	Discrete = new TF1( "Discrete", SelectedFunction, HistoStart, HistoEnd, NumberOfParameters );
+	Discrete -> SetNpx( NumberOfPointsForDrawing );
 }
 
 void FitFunction::generateParameter( unsigned NumberOfParameter, double InitValue, const char * NameOfParamter, double LowerLimit, double HigherLimit, std::string FixingOption )
 {
  	Discrete -> SetParameter( NumberOfParameter, InitValue );
 	Discrete -> SetParName( NumberOfParameter, NameOfParamter );
-    if( FixingOption == "NoFixing" )
-        Discrete -> SetParLimits( NumberOfParameter, LowerLimit, HigherLimit );
-    else if( FixingOption == "Fix" )
-        Discrete -> FixParameter( NumberOfParameter, InitValue );
+	if( FixingOption == "NoFixing" )
+	    Discrete -> SetParLimits( NumberOfParameter, LowerLimit, HigherLimit );
+	else if( FixingOption == "Fix" )
+	    Discrete -> FixParameter( NumberOfParameter, InitValue );
 }
 
 void FitFunction::generateResolutionParameter( unsigned NumberOfFirstParameter, std::vector<LifetimeComponent> Resolution, std::string FixGaussOption, double MaxPos )
 {
-    for( unsigned i=0; i<Resolution.size(); i++ )
-    {
-        if( FixGaussOption == "yes" )
-        {
-            generateParameter( NumberOfFirstParameter + 3*i, Resolution[i].Lifetime, ("Sigma for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 0., "Fix" );
-            generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 0., "Fix" );
-            generateParameter( NumberOfFirstParameter + 2 + 3*i, Arguments[ BinMax ] + i*0.33, ("Offset for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), MaxPos - 0.5, MaxPos + i, "NoFixing" );
-        }
-        else
-        {
-            generateParameter( NumberOfFirstParameter + 3*i, Resolution[i].Lifetime, ("Sigma for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0.01, 5, "NoFixing" );
-            if( i == 0 )
-                generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 1., "NoFixing" );
-            else
-                generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 3.14159/2, "NoFixing" );                
-            generateParameter( NumberOfFirstParameter + 2 + 3*i, Arguments[ BinMax ] + i*0.33, ("Offset for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), MaxPos - 0.5, MaxPos + i + 1, "NoFixing" );
-        }
-    }
+	for( unsigned i=0; i<Resolution.size(); i++ )
+	{
+		if( FixGaussOption == "yes" )
+		{
+			generateParameter( NumberOfFirstParameter + 3*i, Resolution[i].Lifetime, ("Sigma for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 2 + 3*i, Arguments[ BinMax ] + i*0.33, ("Offset for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), MaxPos - 0.5, MaxPos + i, "NoFixing" );
+		}
+		else
+		{
+			generateParameter( NumberOfFirstParameter + 3*i, Resolution[i].Lifetime, ("Sigma for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0.01, 5, "NoFixing" );
+			if( i == 0 )
+				generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 1., "NoFixing" );
+			else
+				generateParameter( NumberOfFirstParameter + 1 + 3*i, SetIntensityParameter( Resolution, i+1 ), ("Fraction parameter for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), 0., 3.14159/2, "NoFixing" );                
+			generateParameter( NumberOfFirstParameter + 2 + 3*i, Arguments[ BinMax ] + i*0.33, ("Offset for " + NumberToChar( i+1, 0 ) + " Gauss").c_str(), MaxPos - 0.5, MaxPos + i + 1, "NoFixing" );
+		}
+	}
 }
 
 void FitFunction::generateInitLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed )
 {
-    unsigned NotFixedIterator = 0, FixedIterator = 0;
+	unsigned NotFixedIterator = 0, FixedIterator = 0;
 	for( unsigned j = 0; j < Lifetimes.size(); j++ )
 	{
 		if( Lifetimes[j].Type == "f" || Lifetimes[j].Type == "pf" || Lifetimes[j].Type == "lpf" || Lifetimes[j].Type == "lf" || Lifetimes[j].Type == "lff" )
 		{
-            generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
-            generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
 			FixedIterator++;
 		}
 		else if( Lifetimes[j].Type == "ps" )
 		{
-            generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
-            generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 0., "Fix" );
 		}
 		else
 		{
 			NotFixedIterator++;
-            generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "NoFixing" );
+			generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "NoFixing" );
 
-            if( TypeOfFit == "" )
-            {
-                if( NotFixedIterator == 1 )
-                    generateParameter( NumberOfFirstParameter + 1 + 2*j, SetIntensityParameter( LifetimesNotFixed, NotFixedIterator ), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
-                else
-                    generateParameter( NumberOfFirstParameter + 1 + 2*j, SetIntensityParameter( LifetimesNotFixed, NotFixedIterator ), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 3.14159/2, "NoFixing" );
-            }
-            else
-            {
-                generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
-            }
+			if( TypeOfFit == "" )
+			{
+				if( NotFixedIterator == 1 )
+					generateParameter( NumberOfFirstParameter + 1 + 2*j, SetIntensityParameter( LifetimesNotFixed, NotFixedIterator ), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
+				else
+					generateParameter( NumberOfFirstParameter + 1 + 2*j, SetIntensityParameter( LifetimesNotFixed, NotFixedIterator ), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 3.14159/2, "NoFixing" );
+			}
+			else
+			{
+				generateParameter( NumberOfFirstParameter + 1 + 2*j, Lifetimes[j].Intensity, ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
+			}
 		}
 	}
 	generateParameter( NumberOfFirstParameter + 2 + 2*(Lifetimes.size()-1), FixedIterator, "Number of somehow fixed Components not ps type", 0., 0., "Fix" );
@@ -145,71 +145,71 @@ void FitFunction::generateInitLifetimeParameter( unsigned NumberOfFirstParameter
 
 void FitFunction::generateIterLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed, TF1 *DiscreteFitted, unsigned Iteration, double VarLvl )
 {
-    unsigned NotFixedIterator = 0;
+	unsigned NotFixedIterator = 0;
 	for( unsigned j = 0; j < Lifetimes.size(); j++ )
 	{
-			Discrete -> SetParameter( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
-			else if( Lifetimes[j].Type == "pf" )
+		Discrete -> SetParameter( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
+		if( Lifetimes[j].Type == "pf" )
+		{
+			generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1, "NoFixing" );	
+		}
+		else if( Lifetimes[j].Type == "lpf" )
+		{
+			generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), "NoFixing" );
+		}
+		else if( Lifetimes[j].Type == "lf" )
+		{
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1, "NoFixing" );	
+		}
+		else if( Lifetimes[j].Type == "lff" )
+		{
+			generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), "NoFixing" );
+		}
+		else if( Lifetimes[j].Type == "ps" )
+		{
+			generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
+					    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );	  
+		}
+		else
+		{
+			NotFixedIterator++;
+			Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, 0.01, 142 );
+			if( NotFixedIterator == 1 )
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 1 );
+			else
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 3.14159/2 );
+	
+			generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "NoFixing" );
+
+			if( TypeOfFit == "" )
 			{
-                generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
-                                   DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
-                                   DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );
-                generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1, "NoFixing" );	
-			}
-			else if( Lifetimes[j].Type == "lpf" )
-			{
-                generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );
-                generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), "NoFixing" );
-			}
-			else if( Lifetimes[j].Type == "lf" )
-			{
-                generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1, "NoFixing" );	
-			}
-			else if( Lifetimes[j].Type == "lff" )
-			{
-                generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), 
-                                    DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), "NoFixing" );
-			}
-			else if( Lifetimes[j].Type == "ps" )
-			{
-                generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 
-                                   DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) - VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), 
-                                   DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j) + VarLvl*DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), "NoFixing" );	  
+				if( NotFixedIterator == 1 )
+					generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
+				else
+					generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 3.14159/2, "NoFixing" );
 			}
 			else
 			{
-				NotFixedIterator++;
-				Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, 0.01, 142 );
-				if( NotFixedIterator == 1 )
-			  		Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 1 );
-			  	else
-			  		Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 3.14159/2 );
-                
-                generateParameter( NumberOfFirstParameter + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 2*j), ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "NoFixing" );
-
-                if( TypeOfFit == "" )
-                {
-                    if( NotFixedIterator == 1 )
-                        generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
-                    else
-                        generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 3.14159/2, "NoFixing" );
-                }
-                else
-                {
-                    generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
-                }
+				generateParameter( NumberOfFirstParameter + 1 + 2*j, DiscreteFitted -> GetParameter(NumberOfFirstParameter + 1 + 2*j), ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str(), 0., 1., "NoFixing" );
 			}
+		}
 	}    
 }
 
 TF1 * FitFunction::getFitFunction()
 {
-    return Discrete;
+	return Discrete;
 }
 
 Double_t FitFunction::DiscreteFitFunctionNoPs( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
@@ -222,13 +222,14 @@ Double_t FitFunction::DiscreteFitFunctionNoPs( Double_t *A, Double_t *P )	//Firs
 			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ );
 			FixedIntensity += P[5 + 3*(int)P[1] + 2*j];
 		}
-		if( FixedIntensity >=1 )
+	if( FixedIntensity >=1 )
         {
-            return sum + P[0]
+		return sum + P[0]
         }
 		for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 		{
-			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, GetIntensityParameterNew( P, 0, 5 + 3*(int)P[1] + 2*P[6 + 3*(int)P[1] + 2*((int)P[2]-1)], (j-P[6 + 3*(int)P[1] + 2*((int)P[2]-1)])+1 )*(1 - FixedIntensity )/* Intensity */ );
+			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+						GetIntensityParameterNew( P, 0, 5 + 3*(int)P[1] + 2*P[6 + 3*(int)P[1] + 2*((int)P[2]-1)], (j-P[6 + 3*(int)P[1] + 2*((int)P[2]-1)])+1 )*(1 - FixedIntensity )/* Intensity */ );
 		}	
 		FixedIntensity = 0.;
 	}
@@ -251,8 +252,9 @@ Double_t FitFunction::DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P )	//
 		}
 		for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 		{
-            if( FixedIntensity < 1 )
-                sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
+			if( FixedIntensity < 1 )
+				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+																	  P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
 		}	
 		FixedIntensity = 0.;
 	}
@@ -273,8 +275,8 @@ Double_t FitFunction::DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P )	
 	}
 	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 	{
-        if( FixedIntensity < 1 )
-            sum += P[3]/* Area */ * 1/* Intensity */ *ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
+		if( FixedIntensity < 1 )
+			sum += P[3]/* Area */ * 1/* Intensity */ *ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
 	}	
 	FixedIntensity = 0.;
 	return sum + P[0];
@@ -303,19 +305,19 @@ Double_t FitFunction::DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P )	
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
-            {
-                if( i )
-                {
-                    sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
-                }
-                else
-                {
-                    sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );			  
-                }
-            }
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
+			{
+				if( i )
+				{
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
+				}
+				else
+				{
+					sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );			  
+				}
+			}
+		}
 		FixedIntensity = 0.;
 	}
 	return sum + P[0];
@@ -349,23 +351,25 @@ Double_t FitFunction::DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P )	
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
-            {
-                if( i == 1 )
-                {
-                    sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
-                }
-                else if( i == 2 )
-                {
-                    sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
-                }
-                else
-                {
-                    sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );			  
-                }
-            }
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
+			{
+				if( i == 1 )
+				{
+					sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+																		P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
+				}
+				else if( i == 2 )
+				{
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );
+				}
+				else
+				{
+					sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+																		P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/FreeIntensity/* Intensity */ );			  
+				}
+			}
+		}
 		FixedIntensity = 0.;
 	}
 	return sum + P[0];
@@ -385,7 +389,8 @@ Double_t FitFunction::DiscreteFitFunctionPs( Double_t *A, Double_t *P )	//First 
 		{
 			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
 			{
-				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+												      ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 				FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 			}
 			else
@@ -395,14 +400,15 @@ Double_t FitFunction::DiscreteFitFunctionPs( Double_t *A, Double_t *P )	//First 
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
-            {
-                sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, GetIntensityParameterNew( P, 2, 5 + 3*(int)P[1] + 2*P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 2, (j-P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]) )*(1 - FixedIntensity )/(1 + FreepPsIntensity)/* Intensity */ );
-            }
-            sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 +
-            FreepPsIntensity)/* Intensity */ );
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
+			{
+				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+							GetIntensityParameterNew( P, 2, 5 + 3*(int)P[1] + 2*P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 2, (j-P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]) )*(1 - FixedIntensity )/(1 + FreepPsIntensity)/* Intensity */ );
+			}
+			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 +
+			FreepPsIntensity)/* Intensity */ );
+		}
 		FixedIntensity = 0.;
 	}
 	return sum + P[0];
@@ -424,7 +430,8 @@ Double_t FitFunction::DiscreteFitFunctionPs_old( Double_t *A, Double_t *P )	//Fi
 		{
 			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
 			{
-				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+												      ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 				FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 			}
 			else
@@ -434,13 +441,15 @@ Double_t FitFunction::DiscreteFitFunctionPs_old( Double_t *A, Double_t *P )	//Fi
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
-            {
-                sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-            }
-            sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
+			{
+				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*
+																				      (1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+			}
+			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*
+																					FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+		}
 		FixedIntensity = 0.;
 	}
 	return sum + P[0];
@@ -459,7 +468,8 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P )	//
 	{
 		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
 		{
-			sum += P[3]/* Area */ * 1/* Intensity */ *(ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+			sum += P[3]/* Area */ * 1/* Intensity */ *(ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+							  ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 			FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 		}
 		else
@@ -468,13 +478,13 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P )	//
 			FixedIntensity += P[5 + 3*(int)P[1] + 2*j];
 		}
 	}
-    if( FixedIntensity < 1 )
-    {
-        for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
-        {
-            sum += P[3]/* Area */ * 1/* Intensity */ *ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-        }
-    }
+	if( FixedIntensity < 1 )
+	{
+		for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
+		{
+			sum += P[3]/* Area */ * 1/* Intensity */ *ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+		}
+	}
 	return sum + P[0];
 }
 
@@ -495,12 +505,14 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P )	//
 			{
 				if( i )
 				{
-					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+										ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 					FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);				  
 				}
 				else
 				{
-					sum += P[3]/* Area */ * P[5]/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+					sum += P[3]/* Area */ * P[5]/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+										ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 					FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 				}
 			}
@@ -519,30 +531,32 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P )	//
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
-            {
-                if( i )
-                {
-                    sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );	  
-                }
-                else
-                {
-                    sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                }
-            }
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
+			{
+				if( i )
+				{
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+											  P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );	  
+				}
+				else
+				{
+					sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+											  P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+				}
+			}
+		}
 		if( i )
 		{
-            if( FixedIntensity < 1 )
-                sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-			FixedIntensity = 0.;		  
+			if( FixedIntensity < 1 )
+				sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+					FixedIntensity = 0.;		  
 		}
 		else
 		{
-            if( FixedIntensity < 1 )
-                sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-			FixedIntensity = 0.;		  
+			if( FixedIntensity < 1 )
+				sum += P[3]/* Area */ * P[5]/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+					FixedIntensity = 0.;		  
 		}
 	}
 	return sum + P[0];
@@ -565,17 +579,20 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P )	//
 			{
 				if( i == 1 )
 				{
-					sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+					sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+													    ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 					FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);				  
 				}
 				else if( i == 2 )
 				{
-					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+										  ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 					FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 				}
 				else
 				{
-					sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
+					sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
+													    ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
 					FixedIntensity += P[5 + 3*(int)P[1] + 2*j]*(1 + P[5 + 3*(int)P[1]]);
 				}
 			}
@@ -599,60 +616,66 @@ Double_t FitFunction::DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P )	//
 			}
 		}
 		if( FixedIntensity < 1 )
-        {
-            for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
-            {
-                switch( i )
-                {
-                    case( 1 ):
-                        sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                        break;
-                    case( 2 ):
-                        sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                        break
-                    case( 0 ):
-                        sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                        break;
-                }
-            }
-        }
-        switch( i )
-        {
-            case( 1 )
-            {
-                if( FixedIntensity < 1 )
-                    sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                FixedIntensity = 0.;		  
-                break;
-            }
-            case( 2 )
-            {
-                if( FixedIntensity < 1 )
-                    sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                FixedIntensity = 0.;
-                break;
-            }
-            case( 0 )
-            {
-                if( FixedIntensity < 1 )
-                    sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
-                FixedIntensity = 0.;
-                break;
-            }
-        }
+		{
+			for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
+			{
+				switch( i )
+				{
+					case( 1 ):
+						sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+																P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+						break;
+					case( 2 ):
+						sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */,
+												  P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+						break
+					case( 0 ):
+						sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, 
+																P[5 + 3*(int)P[1] + 2*j]*(1 - FixedIntensity )/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+						break;
+				}
+			}
+		}
+		switch( i )
+		{
+			case( 1 )
+			{
+				if( FixedIntensity < 1 )
+					sum += P[3]/* Area */ * P[5]*sin(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, 
+						      P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+				FixedIntensity = 0.;		  
+				break;
+			}
+			case( 2 )
+			{
+				if( FixedIntensity < 1 )
+					sum += P[3]/* Area */ * (1-P[5])/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, 
+							P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+				FixedIntensity = 0.;
+				break;
+			}
+			case( 0 )
+			{
+				if( FixedIntensity < 1 )
+					sum += P[3]/* Area */ * P[5]*cos(P[8])/(cos(P[8]) + sin(P[8]))/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, 
+							P[4 + 3*(int)P[1]]/* Lifetime */, (1 - FixedIntensity )*FreepPsIntensity/(1 + FreepPsIntensity)/FreeIntensity/* Intensity */ );
+				FixedIntensity = 0.;
+				break;
+			}
+		}
 	}
 	return sum + P[0];
 }
 
 Double_t FitFunction::ExMoGa( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 )			//A - arguments, p - parameters
 {
-    Double_t Y = P4 / (2*P3) * exp( P1*P1 / (2*P3*P3) - ( A - P2 ) / P3 ) * ( erf( ( A - P1*P1 / P3 - P2 ) / (sqrt(2)*P1) ) - erf( ( - P1*P1 / P3 - P2 ) / (sqrt(2)*P1) ) );
+	Double_t Y = P4 / (2*P3) * exp( P1*P1 / (2*P3*P3) - ( A - P2 ) / P3 ) * ( erf( ( A - P1*P1 / P3 - P2 ) / (sqrt(2)*P1) ) - erf( ( - P1*P1 / P3 - P2 ) / (sqrt(2)*P1) ) );
 	return Y;
 }
 
 Double_t FitFunction::ExMoGa_2( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 )			//A - arguments, p - parameters, alternative version of function
 {
-    Double_t Y = P4 / (2*P3) * exp( P1*P1 / (2*P3*P3) - ( A - P2 ) / P3 ) * ( 1 - erf( ( P2 + P1*P1 / P3 - A ) / (sqrt(2)*P1) ) );
+	Double_t Y = P4 / (2*P3) * exp( P1*P1 / (2*P3*P3) - ( A - P2 ) / P3 ) * ( 1 - erf( ( P2 + P1*P1 / P3 - A ) / (sqrt(2)*P1) ) );
 	return Y;
 }
 

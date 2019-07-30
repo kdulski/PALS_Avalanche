@@ -25,40 +25,40 @@
 class FitFunction
 {
 	public:
-        FitFunction();
-        FitFunction( std::string Approach, int pPsOption, int NumberOfResolutionComp, double oPsLFLimitValue );
-        
-        double oPsLFLimit;
-        
-        Double_t *SelectedFunction;
-        TF1 *Discrete;
-        void generateFitFunction( double HistoStart, double HistoEnd, unsigned NumberOfParameters, double NumberOfPointsForDrawing );
-        void generateParameter( unsigned NumberOfParameter, double InitValue, const char *NameOfParamter, double LowerLimit, double HigherLimit );
-        void generateResolutionParameter( unsigned NumberOfFirstParameter, std::vector<LifetimeComponent> Resolution, std::string FixGaussOption, double MaxPos );
-        void generateInitLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed );
-        void generateIterLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed, TF1 *DiscreteFitted, unsigned Iteration, double VarLvl );
-        TF1 * getFitFunction();
-        
-        Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionPs( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P );
-        Double_t DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P );
+		FitFunction();
+		FitFunction( std::string Approach, int pPsOption, int NumberOfResolutionComp, double oPsLFLimitValue );
+		
+		double oPsLFLimit;
+		
+		Double_t *SelectedFunction;
+		TF1 *Discrete;
+		void generateFitFunction( double HistoStart, double HistoEnd, unsigned NumberOfParameters, double NumberOfPointsForDrawing );
+		void generateParameter( unsigned NumberOfParameter, double InitValue, const char *NameOfParamter, double LowerLimit, double HigherLimit );
+		void generateResolutionParameter( unsigned NumberOfFirstParameter, std::vector<LifetimeComponent> Resolution, std::string FixGaussOption, double MaxPos );
+		void generateInitLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed );
+		void generateIterLifetimeParameter( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed, TF1 *DiscreteFitted, unsigned Iteration, double VarLvl );
+		TF1 * getFitFunction();
+		
+		Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionPs( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P );
+		Double_t DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P );
 
-        Double_t ExMoGa( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
-        Double_t ExMoGa_2( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
-        double GaussDistr( double X, double Mean, double Sigma );
-        double LogGaussDistr( double X, double Mean, double Sigma );
-        
-        Double_t SetIntensityParameter( std::vector<LifetimeComponent> Parameters, unsigned NumberOfParameter );
-        Double_t GetIntensityParameter( std::vector<Double_t> Parameters, unsigned NumberOfParameter );
-        Double_t GetIntensityParameterNew( Double_t *P, int type, unsigned startIndex, unsigned NumberOfParameter );
-        Double_t GetIntensityParameterErrorNew( Double_t *P, unsigned NumberOfParameter );
+		Double_t ExMoGa( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
+		Double_t ExMoGa_2( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
+		double GaussDistr( double X, double Mean, double Sigma );
+		double LogGaussDistr( double X, double Mean, double Sigma );
+		
+		Double_t SetIntensityParameter( std::vector<LifetimeComponent> Parameters, unsigned NumberOfParameter );
+		Double_t GetIntensityParameter( std::vector<Double_t> Parameters, unsigned NumberOfParameter );
+		Double_t GetIntensityParameterNew( Double_t *P, int type, unsigned startIndex, unsigned NumberOfParameter );
+		Double_t GetIntensityParameterErrorNew( Double_t *P, unsigned NumberOfParameter );
 }
 
 #endif
