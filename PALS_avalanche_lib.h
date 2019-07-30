@@ -35,6 +35,11 @@
 #include <armadillo>
 #include <time.h>
 
+#include <PALS_avalanche_fileTools.h>
+#include <PALS_avalanche_fitFunctions.h>
+
+#define oPsLFLimit 0.7
+
 using namespace arma;
 
 class LifetimeComponent
@@ -63,9 +68,14 @@ class DiscreteFitResult
 class Fit
 {
 	public:
+        FileTools fileTools;
+        std::string TypeOfFit;
+        
 		std::string Path;
 		std::string PathWithDate;
 		std::string TypeOfData;
+        std::string ROOTDirectory;
+        std::string ROOTHistogram;
 		std::string TypeOfDataExtended;
 		double BinWidth;
 		unsigned LastBinMinValue;
@@ -130,52 +140,17 @@ class Fit
 		unsigned NumberOfIterations;
 
 		Fit();
-		Fit( std::string path, std::string pathForDetails );
-		Fit( std::string path, std::string nameOfHistogram, std::string pathForDetails );
+		Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType );
+        int RenormalizeComponentsIntensities();
+		void SortLifetimesByType();
+        void GetHistogramToVector( std::string path, int ROOTFileTest )
 		void LinearFilter( unsigned FilterRange );
 		void RangeBackgroundData();
 		int Discrete();
-		int Discrete_old();
-		int Discrete_exp();
-		void SortLifetimesByType();
 		void Deconvolution();
 		double FindingOptimalAreaParameter( std::vector< double > Sig );
-		double PreIterateGauss( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
-		double PreIterateLogGauss( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
-		double PreIterateMixed( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
+		double PreIterate( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
 		double Iterate( vec Intensities, double Step, double Lambda, double PreviousChi );
-		double IterateExp( vec Intensities, double Step, double Lambda, double PreviousChi );
-		double IterateExp2( vec Intensities, double Step, double Lambda, double PreviousChi );
 };
-
-Double_t SetIntensityParameter( std::vector<LifetimeComponent> Parameters, unsigned NumberOfParameter );
-Double_t GetIntensityParameter( std::vector<Double_t> Parameters, unsigned NumberOfParameter );
-Double_t GetIntensityParameterNew( Double_t *P, int type, unsigned startIndex, unsigned NumberOfParameter );
-Double_t GetIntensityParameterErrorNew( Double_t *P, unsigned NumberOfParameter );
-
-Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionPs( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P );
-Double_t DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P );
-
-Double_t ExMoGa( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
-Double_t ExMoGa_2( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
-double GaussDistr( double X, double Mean, double Sigma );
-double LogGaussDistr( double X, double Mean, double Sigma );
-TH1F* FillHistogram( std::string Name, int BinNumber, double Start, double Stop, std::vector<double>& Data );
-std::string NumberToChar( double Number, int Precision);
-bool PathCheck( std::string Path );
-bool FileCheck(const std::string& NameOfFile);
-bool CheckTheLine( char FirstCharacter, char TestCharacter, unsigned NumberOfLine );
-
-void TestIntensities();
-const std::string GetTime();
-double FindPeak( std::vector< double > Argument, std::vector< double > Values, unsigned Lowerfit, unsigned Higherfit );
 
 #endif

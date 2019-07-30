@@ -1,7 +1,11 @@
 Fit Details - Discrete Fit
 ------------------
-Type of the data ( [histogram] or [times] ):
+Type of the data ( [histogram] or [times] or [ROOT] )
 times
+Name of the directory in ROOT file, if not ROOT file or in main diretory write [none]
+none
+Name of the histogram in directory in ROOT file, if not ROOT file write [none]
+none
 ---
 What is the [BinWidth](double)
 0.02
@@ -26,6 +30,8 @@ Start of Fit range as the fraction of the histogram amplitude(double)
 0.3
 First Bin Center - For the sake of drawing(double)
 0
+Last Bin Center - For the sake of range for histogram data type(double)
+120
 Do You want to fix the resolution component(yes/no)
 no
 ------------------
