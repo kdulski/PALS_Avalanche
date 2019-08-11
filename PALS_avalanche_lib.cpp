@@ -331,7 +331,7 @@ int Fit::Discrete()
 	std::cout << "[LastBin - new!, of the DrawRange] [End of Range] - test if they are in proper order (LastBin < EndOfRange)\t" << lastbin << "   " << Range_To << std::endl;
 	double area = 0.013*(histogram -> Integral( firstbin, lastbin ) - Background*( Arguments[ lastbin ] - Arguments[ firstbin ] ) );
 		    //0.013 value... do not know how this value appeared, but after changing it to other value area, area is worse estimated..Probably this is somehow the result of DifferenceOfArgumentsInFittingFunction/BinWidthOfHistogram???!!!
-            //do not had time to study this, as it is not very crucial, because it is fitted to histogram
+            //do not had time to study this, as it is not very crucial, because it is fitted to histogram as a paramater
 	std::cout << "Area \t \t \t \t \t \t " << area << std::endl;
 	area = fabs(area);
 	std::cout << "Range - Arguments [Start] [End] \t \t" << Arguments[ Range_From ] << "   " << Arguments[ Range_To ] << std::endl;
@@ -361,6 +361,8 @@ int Fit::Discrete()
 	{
 		//fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, iteration, VarLvl );
 		//Discrete = fitTools.getFitFunction();
+	  
+		// Must be like that \/ because root is unable to fit properly outside, like in created class FitFunction
 		for( unsigned j = 0; j < Lifetimes.size(); j++ )
 		{	
 			if( Lifetimes[j].Type == "f" )
