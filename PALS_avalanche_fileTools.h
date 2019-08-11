@@ -27,7 +27,7 @@ class FileTools
 		bool CheckTheLine( char FirstCharacter, char TestCharacter, unsigned NumberOfLine );    //Checking if the line number NumberOfLine starts with TestCharacter
 		std::vector<std::string> GetFitDetails();
 		std::vector<int> GetComponentsMultiplicities( std::string SizesToExtract );
-		std::vector<std::vector<std::string>> GetComponentDetails( std::string DetailsToExtract );
+		std::vector<std::string> GetComponentDetails( std::string DetailsToExtract );
         
 	private:
 		std::string FitDetailsFile;

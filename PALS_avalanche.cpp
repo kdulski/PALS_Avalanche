@@ -25,8 +25,8 @@ int main( int argc, char* argv[] ) 		//First argument - File with data, second -
 		Fit fit( TimesPath, "FitDetails", ROOTFileTest, "" );                                                      //Getting times from file to object
 		fit.RangeBackgroundData();
 		DeconvolutionOption = fit.Discrete();
-		if( DeconvolutionOption )
-			fit.Deconvolution();
+		//if( DeconvolutionOption )
+		//	fit.Deconvolution();
 	}
 	else
 	{
@@ -41,10 +41,10 @@ int main( int argc, char* argv[] ) 		//First argument - File with data, second -
 		Fit fit( TimesPath, FitDetailsPath, ROOTFileTest, FitType );                                                      //Getting times from file to object
 		fit.RangeBackgroundData();
 		DeconvolutionOption = fit.Discrete();
-		if( DeconvolutionOption )
-			fit.Deconvolution();
+		//if( DeconvolutionOption )
+		//	fit.Deconvolution();
 	}
-	return 0;
+	return DeconvolutionOption;
 }
 
 

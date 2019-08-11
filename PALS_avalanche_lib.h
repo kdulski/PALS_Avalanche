@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
-#include <TString.h>
 #include <TGraph.h>
 #include <TROOT.h>
 #include <TStyle.h>
@@ -35,41 +34,21 @@
 //#include <armadillo>
 #include <time.h>
 
-#include <PALS_avalanche_fileTools.h>
-#include <PALS_avalanche_fitFunctions.h>
+#include "PALS_avalanche_libTools.h"
+#include "PALS_avalanche_fileTools.h"
+//#include "PALS_avalanche_fitFunctions.h"
+#include "PALS_avalanche_resultsSaver.h"
 
-#define oPsLFLimit 0.7
-#define pPsLFLimit 0.2
+#define oPsLFLimit 0.7f
+#define pPsLFLimit 0.2f
 
-using namespace arma;
-
-class LifetimeComponent
-{
-	public:
-		float Lifetime;
-		float Intensity;
-		std::string Type;
-
-		LifetimeComponent( float lifetime, float intensity, std::string type );	
-		LifetimeComponent();
-};
-
-class DiscreteFitResult
-{
-	public:
-		double Parameter;
-		double Uncertainity;
-		std::string Type;
-		
-		DiscreteFitResult();
-		DiscreteFitResult( double Par, double Unc );
-};
-
+//using namespace arma;
 
 class Fit
 {
 	public:
 		FileTools fileTools;
+		//ResultsSaver Results;
 		std::string TypeOfFit;
         
 		std::string Path;
@@ -88,6 +67,7 @@ class Fit
 		double EndOfFitValue;
 		double StartOfFitValue;
 		double FirstBinCenter;
+		double LastBinCenter;
 		std::string FixGauss;
 		std::vector<LifetimeComponent> Lifetimes;
 		std::vector<LifetimeComponent> LifetimesNotFixed;
@@ -110,6 +90,8 @@ class Fit
 		std::string ShapeOfComponent;
 		int TypeOfContinousFit;
 
+		unsigned NotFixedIterator;
+		unsigned FixedIterator;
 		std::vector< DiscreteFitResult > LifetimesFromDiscrete;
 		std::vector< DiscreteFitResult > IntensitiesFromDiscrete;		
 		std::vector< DiscreteFitResult > ResolutionFromDiscrete;
@@ -118,7 +100,7 @@ class Fit
 		double AreaFromDiscrete;
 
 		int DecoOption;
-		double Scaler;
+		/*double Scaler;
 		double FracMinLF;
 		double FracMaxLF;
 		vec LFGrid;
@@ -139,20 +121,22 @@ class Fit
 		double StepForPreIteration;
 		unsigned NumberOfPreIterations;
 		double StepForIteration;
-		unsigned NumberOfIterations;
+		unsigned NumberOfIterations;*/
 
 		Fit();
 		Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType );
 		int RenormalizeComponentsIntensities();
 		void SortLifetimesByType();
-		void GetHistogramToVector( std::string path, int ROOTFileTest )
+		void GetHistogramToVector( std::string path, int ROOTFileTest );
 		void LinearFilter( unsigned FilterRange );
 		void RangeBackgroundData();
 		int Discrete();
-		void Deconvolution();
+		/*void Deconvolution();
 		double FindingOptimalAreaParameter( std::vector< double > Sig );
 		double PreIterate( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
-		double Iterate( vec Intensities, double Step, double Lambda, double PreviousChi );
+		double Iterate( vec Intensities, double Step, double Lambda, double PreviousChi );*/
 };
 
+TH1F* FillHistogram( std::string Name, int BinNumber, double Start, double Stop, std::vector<double>& Data );
+const std::string GetTime();
 #endif

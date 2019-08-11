@@ -29,8 +29,8 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 	DiscreteFit -> Draw("C same");
 	
 	TFile *resultsFile = new TFile( RootFile, "update" );
-	testFile -> mkdir( PathOfFile.c_str() );
-	testFile -> cd( PathOfFile.c_str() );
+	resultsFile -> mkdir( PathOfFile.c_str() );
+	resultsFile -> cd( PathOfFile.c_str() );
 		    
 	if( not fileTools.PathCheck( ResultsPath ) )
 	{
@@ -48,11 +48,11 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 	delete c1;
 }
 
-std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitResultsToTXT( std::string Path, std::string Prefix, std::string PathWithDate, 
-                                                            TF1* Discrete, double Background, double SDBackground, Double_t* ResolutionsFromFit, Double_t* ResolutionsFromFitErrors, 
-                                                            int pPsIndex, double pPsIntensity, Double_t* FreeParameters, Double_t* FreeParametersErrors, 
-                                                            double FixedIntensities, double FreeIntensitiesTopPs, double FixedFixedIntensity, std::vector<LifetimeComponent> Lifetimes, 
-                                                            double oPsLifetimeCutoff, double pPsLifetimeCutoff, std::string PathForExcel )
+std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitResultsToTXTandExcel( std::string Path, std::string Prefix, std::string PathWithDate, 
+                                                            TF1* Discrete, TH1F* histogram, double Background, double SDBackground, Double_t* ResolutionsFromFit, Double_t* ResolutionsFromFitErrors, 
+                                                            unsigned FixedIterator, int pPsIndex, double pPsIntensity, Double_t* FreeParameters, Double_t* FreeParametersErrors, 
+                                                            double FixedIntensities, double FreeIntensitiesTopPs, double FixedFixedIntensity, double FreeIntensities, std::vector<LifetimeComponent> Lifetimes, 
+                                                            double MinArgument, double MaxArgument, double oPsLifetimeCutoff, double pPsLifetimeCutoff, std::string PathForExcel, std::string TypeOfFit )
 {
 	std::vector< std::vector< DiscreteFitResult > > ResultsFromDiscrete;
 	std::vector< DiscreteFitResult > LifetimesFromDiscrete;
@@ -62,25 +62,31 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	std::vector< DiscreteFitResult > FractionsFromDiscrete;
 	int NotFixedIterator = 0;
 	std::ofstream res;
-	res.open( Res_path + "/" + Prefix + PathWithDate );
-	res << "Results from fitting" << std::endl;
+	
+	res.open( Path + "/" + Prefix + PathWithDate );
+	if( TypeOfFit == "" )
+		res << "Results from fitting with default method" << std::endl;
+	else if( TypeOfFit == "old" )
+		res << "Results from fitting with old method" << std::endl;
+	else
+		res << "Results from fitting with experimental method" << std::endl;
 	res << "Parameter name\t \t \t \t \t" << "Value\t \t \t" << "Error" << std::endl;
 	res << std::endl;
 	res << std::endl;
-	res << "Background\t \t \t \t \t" << NumberToChar( Background, 5 ) << "\t \t" << SDBackground << std::endl;
+	res << "Background\t \t \t \t \t" << fileTools.NumberToChar( Background, 5 ) << "\t \t" << SDBackground << std::endl;
 	unsigned ResSize = (unsigned)ResolutionsFromFit[1];
 	for( unsigned i = 0; i < ResSize; i++ )
 	{
-		res << ("Sigma for " + NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
-			  << "\t \t \t \t " << NumberToChar( Discrete -> GetParameter( 4 + 3*i ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*i ) << std::endl;
+		res << ("Sigma for " + fileTools.NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
+			  << "\t \t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*i ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*i ) << std::endl;
 		ResolutionFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*i ), Discrete -> GetParError( 4 + 3*i )  ) );
-		res << ("FWHM for " + NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
-			  << "\t \t \t \t " << NumberToChar( 2.355*Discrete -> GetParameter( 4 + 3*i ), 5 ) << "\t \t" << 2.355*Discrete -> GetParError( 4 + 3*i ) << std::endl;
-		res << ("Fraction for " + NumberToChar( i+1, 0 ) + " Gauss").c_str() 
-			  << "\t \t \t \t " << NumberToChar( GetIntensityParameterNew( ResolutionsFromFit, 3, 3, i+1 ),5 ) << "\t \t" << GetIntensityParameterErrorNew( ResolutionsFromFitErrors, i+1 ) << std::endl;
+		res << ("FWHM for " + fileTools.NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
+			  << "\t \t \t \t " << fileTools.NumberToChar( 2.355*Discrete -> GetParameter( 4 + 3*i ), 5 ) << "\t \t" << 2.355*Discrete -> GetParError( 4 + 3*i ) << std::endl;
+		res << ("Fraction for " + fileTools.NumberToChar( i+1, 0 ) + " Gauss").c_str() 
+			  << "\t \t \t \t " << fileTools.NumberToChar( GetIntensityParameterNew( ResolutionsFromFit, 3, 3, i+1 ),5 ) << "\t \t" << GetIntensityParameterErrorNew( ResolutionsFromFitErrors, i+1 ) << std::endl;
 		FractionsFromDiscrete.push_back( DiscreteFitResult( GetIntensityParameterNew( ResolutionsFromFit, 3, 3, i+1 ), 0 ) );
-		res << ("Offset for " + NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
-			  << "\t \t \t \t " << NumberToChar( Discrete -> GetParameter( 6 + 3*i ), 5 ) << "\t \t" << Discrete -> GetParError( 6 + 3*i ) << std::endl;
+		res << ("Offset for " + fileTools.NumberToChar( i+1, 0 ) + " Gauss [ns]").c_str() 
+			  << "\t \t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 6 + 3*i ), 5 ) << "\t \t" << Discrete -> GetParError( 6 + 3*i ) << std::endl;
 		OffsetsFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 6 + 3*i ), Discrete -> GetParError( 6 + 3*i ) ) );
 		res << std::endl;
 	}
@@ -88,12 +94,12 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	if( pPsIndex + 1 )
 	{
 		unsigned j = pPsIndex;
-		res << "Lifetime for p-PS Component\t \t \t " << NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
+		res << "Lifetime for p-PS Component\t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
 		LifetimesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), Discrete -> GetParError( 4 + 3*ResSize + 2*j ) ) );
-		res << "Intensity for p-PS Component \t \t \t " <<  NumberToChar( pPsIntensity, 5) << std::endl;
-		res << "Intensity for p-PS Component in percent \t " <<  NumberToChar( pPsIntensity * 100, 5) << std::endl;
-		res << "Intensity for p-PS Component in percent no fix" << "\t " <<  NumberToChar( pPsIntensity * 100/(1-FixedFixedIntensity), 5 ) << std::endl;	
-		res << "Intensity for p-PS Component in percent of o-Ps\t " <<  NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize ) * 100, 5)  << std::endl;
+		res << "Intensity for p-PS Component \t \t \t " <<  fileTools.NumberToChar( pPsIntensity, 5) << std::endl;
+		res << "Intensity for p-PS Component in percent \t " <<  fileTools.NumberToChar( pPsIntensity * 100, 5) << std::endl;
+		res << "Intensity for p-PS Component in percent no fix" << "\t " <<  fileTools.NumberToChar( pPsIntensity * 100/(1-FixedFixedIntensity), 5 ) << std::endl;	
+		res << "Intensity for p-PS Component in percent of o-Ps\t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize ) * 100, 5)  << std::endl;
 		IntensitiesFromDiscrete.push_back( DiscreteFitResult( pPsIntensity, 0 ) );
 		res << std::endl;
 	}
@@ -101,20 +107,20 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	{
 		if( j < FixedIterator + pPsIndex + 1 && (int)j != pPsIndex )
 		{
-			res << ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component [ns]").c_str()
-				  << "\t \t \t " << NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
+			res << ("Lifetime for " + fileTools.NumberToChar( j+1, 0 ) + " Component [ns]").c_str()
+				  << "\t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
 			LifetimesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), Discrete -> GetParError( 4 + 3*ResSize + 2*j ) ) );
-			res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str() 
-				  << "\t \t \t " <<  NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ), 5) << "\t \t" << 
+			res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component").c_str() 
+				  << "\t \t \t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ), 5) << "\t \t" << 
 					        Discrete -> GetParError( 5 + 3*ResSize + 2*j )  << std::endl;
 			IntensitiesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ), Discrete -> GetParError( 5 + 3*ResSize + 2*j ) ) );
-			res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component in percent").c_str()
-		                  << "\t \t " <<  NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ) * 100, 5 ) << "\t \t" <<
+			res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent").c_str()
+		                  << "\t \t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ) * 100, 5 ) << "\t \t" <<
 		                               Discrete -> GetParError( 5 + 3*ResSize + 2*j ) * 100 << std::endl;
 			if( Lifetimes[j].Type != "f" )
 			{
-				  res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component in percent no fix").c_str()
-		                  << "\t " <<  NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ) * 100/(1-FixedFixedIntensity), 5 ) << "\t \t" <<
+				  res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent no fix").c_str()
+		                  << "\t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j ) * 100/(1-FixedFixedIntensity), 5 ) << "\t \t" <<
 		                               Discrete -> GetParError( 5 + 3*ResSize + 2*j ) * 100/(1-FixedFixedIntensity) << std::endl;
 			}
 			else
@@ -126,19 +132,37 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 		}
 		else if( (int)j != pPsIndex )
 		{
-			NotFixedIterator++;
-			res << ("Lifetime for " + NumberToChar( j+1, 0 ) + " Component [ns]").c_str()
-				  << "\t \t \t " << NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
-			LifetimesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), Discrete -> GetParError( 4 + 3*ResSize + 2*j ) ) );
-			res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component").c_str() 
-				  << "\t \t \t " <<  NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) , 5) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) << std::endl;	  
-			IntensitiesFromDiscrete.push_back( DiscreteFitResult( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ), GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) ) );
-			res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component in percent").c_str()
-		                  << "\t \t " <<  NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100, 5 ) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator ) *(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100 << std::endl;
-			res << ("Intensity for " + NumberToChar( j+1, 0 ) + " Component in percent no fix").c_str()
-		                  << "\t " <<  NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity), 5 ) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator ) *(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity) << std::endl;	  
-		        std::cout << "Intensity in percent: \t" << GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100 << std::endl;
-			res << std::endl;
+			if( TypeOfFit == "" )
+			{
+				NotFixedIterator++;
+				res << ("Lifetime for " + fileTools.NumberToChar( j+1, 0 ) + " Component [ns]").c_str()
+					  << "\t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
+				LifetimesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), Discrete -> GetParError( 4 + 3*ResSize + 2*j ) ) );
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component").c_str() 
+					  << "\t \t \t " <<  fileTools.NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) , 5) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) << std::endl;	  
+				IntensitiesFromDiscrete.push_back( DiscreteFitResult( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ), GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) ) );
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent").c_str()
+					  << "\t \t " <<  fileTools.NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100, 5 ) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator ) *(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100 << std::endl;
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent no fix").c_str()
+					  << "\t " <<  fileTools.NumberToChar( GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity), 5 ) << "\t \t" << GetIntensityParameterErrorNew( FreeParametersErrors, NotFixedIterator ) *(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity) << std::endl;	  
+				std::cout << "Intensity in percent: \t" << GetIntensityParameterNew( FreeParameters, 3, 3, NotFixedIterator )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100 << std::endl;
+				res << std::endl;
+			}
+			else
+			{
+				res << ("Lifetime for " + fileTools.NumberToChar( j+1, 0 ) + " Component [ns]").c_str()
+				  << "\t \t \t " << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << std::endl;
+				LifetimesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), Discrete -> GetParError( 4 + 3*ResSize + 2*j ) ) );
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component").c_str() 
+					  << "\t \t \t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) )/FreeIntensities , 5) << "\t \t" << Discrete -> GetParError( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) )/FreeIntensities << std::endl;
+				IntensitiesFromDiscrete.push_back( DiscreteFitResult( Discrete -> GetParameter( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) )/FreeIntensities, Discrete -> GetParError( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) )/FreeIntensities ) );
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent").c_str()
+					  << "\t \t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/FreeIntensities, 5 ) << "\t \t" << Discrete -> GetParError( 5 + 3*ResSize + 2*j ) *(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/FreeIntensities<< std::endl;
+				res << ("Intensity for " + fileTools.NumberToChar( j+1, 0 ) + " Component in percent no fix").c_str()
+					  << "\t " <<  fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity)/FreeIntensities, 5 ) << "\t \t" << Discrete -> GetParError( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/(1-FixedFixedIntensity)/FreeIntensities << std::endl;	  
+				std::cout << "Intensity in percent: \t" << Discrete -> GetParameter( 5 + 3*ResSize + 2*j )*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*ResSize ) ) * 100/FreeIntensities << std::endl;
+				res << std::endl;
+			}
 		}
 	}
 	
@@ -196,17 +220,20 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 			}
 		}
 	}
-	res << "Lifetime cutoffs for para- and ortho-PS " << pPsLifetimeCutoff << " " << oPsLifetimeCutoff << std::endl;
+	res << std::endl;
+	res << "Lifetime cutoffs for para- and ortho-PS\t" << pPsLifetimeCutoff << "\t" << oPsLifetimeCutoff << std::endl;
 	res << "Below parameters can vary depending on the cutoffs chosen for analysis, cuttofs are given in PALS_avalanche_lib_h header" << std::endl;
-	res << "Frac2GParameterNew \t" << Frac2GParameterNew << "\t" << "Number of annihilations into 2 gamma quanta based on the oPs components and direct annihilation" << std::endl;	
-	res << "Frac3GParameternew \t" << Frac3GParameterNew << "\t" << "Number of annihilations into 3 gamma quanta based on the oPs components and direct annihilation" << std::endl;	
-	res << "DeltaParameter \t" << DeltaParameter << "\t" << "Parameter taken from Acta Physica Polonica B48 (2017) 1577" << std::endl;				
+	res << std::endl;
+	res << "Frac2GParameterNew \t" << fileTools.NumberToChar( Frac2GParameterNew, 6 ) << "\t" << "Number of annihilations into 2 gamma quanta based on the oPs components and direct annihilation" << std::endl;
+	res << "Frac3GParameternew \t" << fileTools.NumberToChar( Frac3GParameterNew, 6 ) << "\t" << "Number of annihilations into 3 gamma quanta based on the oPs components and direct annihilation" << std::endl;
+	res << "Frac2GParameterNewNorm \t" << fileTools.NumberToChar( Frac2GParameterNew /(Frac2GParameterNew + Frac3GParameterNew), 6 ) << "\t" << "Number of annihilations into 2 gamma quanta based on the oPs components and direct annihilation normalized" << std::endl;	
+	res << "DeltaParameter \t \t" << fileTools.NumberToChar( DeltaParameter, 6 ) << "\t" << "Parameter taken from Acta Physica Polonica B48 (2017) 1577" << std::endl;				
 	
 	double sum = 0.;
 	unsigned sumIT = 0;
 	for( int i = 0; i < histogram->GetNbinsX(); i++ )
 	{
-		if( histogram->GetBinCenter(i) >= Arguments[ Range_From ] && histogram->GetBinCenter(i) <= Arguments[ Range_To ] )
+		if( histogram->GetBinCenter(i) >= MinArgument && histogram->GetBinCenter(i) <= MaxArgument )
 		{
 			sum += histogram->GetBinContent(i);
 			sumIT++;
@@ -221,7 +248,7 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	double Diff = 0.;
 	for( int i = 0; i < histogram->GetNbinsX(); i++ )
 	{
-		if( histogram->GetBinCenter(i) >= Arguments[ Range_From ] && histogram->GetBinCenter(i) <= Arguments[ Range_To ] )
+		if( histogram->GetBinCenter(i) >= MinArgument && histogram->GetBinCenter(i) <= MaxArgument )
 		{		
 			if( histogram->GetBinContent(i) > 0 )			
 				Diff += (sum - histogram->GetBinContent(i) )*( sum - histogram->GetBinContent(i) )/histogram->GetBinContent(i);
@@ -231,44 +258,44 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	}
 	std::cout << "Diff between mean of histogram and values \t" << Diff << std::endl;
 
-	res << "ChiSquared" << "\t \t \t \t \t" << NumberToChar( Discrete -> GetChisquare(), 4 ) << std::endl;
-	res << "Probability of the fit " << "\t \t \t \t" << NumberToChar(1 - Discrete -> GetProb(), 4) << std::endl;
-	res << "Rsquared" << "\t \t \t \t \t" << NumberToChar(1 - (Discrete -> GetChisquare())/Diff, 4 ) << std::endl;
-	res << "Adjusted Rsquared" << "\t \t \t \t" << NumberToChar(1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 4 ) << std::endl;
-	res << "ChiSquared/DegreesOfFreedom" << "\t \t \t" << NumberToChar( Discrete -> GetChisquare()/Discrete -> GetNDF(), 4 ) << std::endl;
+	res << "ChiSquared" << "\t \t \t \t \t" << fileTools.NumberToChar( Discrete -> GetChisquare(), 4 ) << std::endl;
+	res << "Probability of the fit " << "\t \t \t \t" << fileTools.NumberToChar(1 - Discrete -> GetProb(), 4) << std::endl;
+	res << "Rsquared" << "\t \t \t \t \t" << fileTools.NumberToChar(1 - (Discrete -> GetChisquare())/Diff, 4 ) << std::endl;
+	res << "Adjusted Rsquared" << "\t \t \t \t" << fileTools.NumberToChar(1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 4 ) << std::endl;
+	res << "ChiSquared/DegreesOfFreedom" << "\t \t \t" << fileTools.NumberToChar( Discrete -> GetChisquare()/Discrete -> GetNDF(), 4 ) << std::endl;
 	res.close();
 	
 	std::vector< DiscreteFitResult > StatisticalParams;
-	StatisticalParams.push_back( DiscreteFitResult, Frac2GParameterNew, 0 );
-	StatisticalParams.push_back( DiscreteFitResult, Frac3GParameterNew, 0 );
-	StatisticalParams.push_back( DiscreteFitResult, DeltaParameter, 0 );
+	StatisticalParams.push_back( DiscreteFitResult( Frac2GParameterNew, 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( Frac3GParameterNew, 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( DeltaParameter, 0 ) );
 	
-	StatisticalParams.push_back( DiscreteFitResult, Discrete -> GetChisquare(), 0 );
-	StatisticalParams.push_back( DiscreteFitResult, 1 - Discrete -> GetProb(), 0 );
-	StatisticalParams.push_back( DiscreteFitResult, 1 - (Discrete -> GetChisquare())/Diff, 0 );
-	StatisticalParams.push_back( DiscreteFitResult, 1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 0 );
-	StatisticalParams.push_back( DiscreteFitResult, Discrete -> GetChisquare()/Discrete -> GetNDF(), 0 );
+	StatisticalParams.push_back( DiscreteFitResult( Discrete -> GetChisquare(), 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( 1 - Discrete -> GetProb(), 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( 1 - (Discrete -> GetChisquare())/Diff, 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( 1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 0 ) );
+	StatisticalParams.push_back( DiscreteFitResult( Discrete -> GetChisquare()/Discrete -> GetNDF(), 0 ) );
 	
 //---------------------------------------Writing to csv	
-	bool IsFileExists =  FileCheck( Res_path + "/" + "Discrete_Fit_" + PathForExcel + ".csv" );
+	bool IsFileExists =  fileTools.FileCheck( Path + "/" + "Discrete_Fit_" + PathForExcel + ".csv" );
 	std::ofstream res_csv;
 	if( IsFileExists )
-		res_csv.open( Res_path + "/" + "Discrete_Fit_" + PathForExcel + ".csv", std::ofstream::app );
+		res_csv.open( Path + "/" + "Discrete_Fit_" + PathForExcel + ".csv", std::ofstream::app );
 	else
-		res_csv.open( Res_path + "/" + "Discrete_Fit_" + PathForExcel + ".csv" );
+		res_csv.open( Path + "/" + "Discrete_Fit_" + PathForExcel + ".csv" );
 	res_csv << PathWithDate;	
 	res_csv << ",Frac2GParameternew,Frac3GParameternew,DeltaParameter,ChiSquared,Probability_of_the_fit,Rsquared,Adjusted_Rsquared,ChiSquared/DegreesOfFreedom,";
 	res_csv << "Background,Standard_deviation_of_Background,";
-	for( unsigned i = 0; i < Resolution.size(); i++ )
+	for( unsigned i = 0; i < ResSize; i++ )
 	{
-		res_csv << "Sigma_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Error_of_Sigma_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "FWHM_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Error_of_FWHM_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Fraction_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Error_of_Fraction_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Offset_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
-		res_csv << "Error_of_Offset_for_" << NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Sigma_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Error_of_Sigma_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "FWHM_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Error_of_FWHM_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Fraction_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Error_of_Fraction_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Offset_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
+		res_csv << "Error_of_Offset_for_" << fileTools.NumberToChar( i+1, 0 ) << "_Gauss_[ns],";
 	}
 	res_csv << ",";
 	if( pPsIndex + 1 )
@@ -286,75 +313,75 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 	{
 		if( LifetimesFromDiscrete[ Order[j] ].Type == "f" )
 		{
-			res_csv << "Lifetime_for_" << NumberToChar( j+1, 0 ) << "_Component_[ns],";
-			res_csv << "Error_of_Lifetime_for_" << NumberToChar( j+1, 0 )<< "_Component_[ns],";
-			res_csv << "Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component,";
-			res_csv << "Error_of_Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component,";
-			res_csv << "Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent,";
-			res_csv << "Error_of_Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent,";
+			res_csv << "Lifetime_for_" << fileTools.NumberToChar( j+1, 0 ) << "_Component_[ns],";
+			res_csv << "Error_of_Lifetime_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_[ns],";
+			res_csv << "Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component,";
+			res_csv << "Error_of_Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component,";
+			res_csv << "Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent,";
+			res_csv << "Error_of_Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent,";
 			FixedIntensity += IntensitiesFromDiscrete[ Order[j] ].Parameter;
 		}
 		else
 		{
-			res_csv << "Lifetime_for_" << NumberToChar( j+1, 0 )<< "_Component_[ns],";
-			res_csv << "Error_of_Lifetime_for_" << NumberToChar( j+1, 0 )<< "_Component_[ns],";
-			res_csv << "Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component,";
-			res_csv << "Error_of_Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component,";
-			res_csv << "Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent,";
-			res_csv << "Error_of_Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent,";
-			res_csv << "Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent_no_fix,";
-			res_csv << "Error_of_Intensity_for_" << NumberToChar( j+1, 0 )<< "_Component_in_percent_no_fix,";
+			res_csv << "Lifetime_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_[ns],";
+			res_csv << "Error_of_Lifetime_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_[ns],";
+			res_csv << "Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component,";
+			res_csv << "Error_of_Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component,";
+			res_csv << "Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent,";
+			res_csv << "Error_of_Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent,";
+			res_csv << "Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent_no_fix,";
+			res_csv << "Error_of_Intensity_for_" << fileTools.NumberToChar( j+1, 0 )<< "_Component_in_percent_no_fix,";
 		}
 	}
 	res_csv << "\n";
 	res_csv << ",";
-	res_csv << NumberToChar( Frac2GParameterNew, 5 ) << "," << NumberToChar( Frac3GParameterNew, 5 ) << "," << NumberToChar( DeltaParameter, 5 ) << ",";
-	res_csv << NumberToChar( Discrete -> GetChisquare(), 4 ) << "," << NumberToChar(1 - Discrete -> GetProb(), 4) << "," << NumberToChar(1 - (Discrete -> GetChisquare())/Diff, 4 ) << "," ;
-	res_csv << NumberToChar(1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 4 ) << "," << NumberToChar(  Discrete -> GetChisquare()/Discrete -> GetNDF(), 4 ) << ",";
-	res_csv << NumberToChar( Background, 5 ) << "," << SDBackground << ",";
-	for( unsigned i = 0; i < Resolution.size(); i++ )
+	res_csv << fileTools.NumberToChar( Frac2GParameterNew, 5 ) << "," << fileTools.NumberToChar( Frac3GParameterNew, 5 ) << "," << fileTools.NumberToChar( DeltaParameter, 5 ) << ",";
+	res_csv << fileTools.NumberToChar( Discrete -> GetChisquare(), 4 ) << "," << fileTools.NumberToChar(1 - Discrete -> GetProb(), 4) << "," << fileTools.NumberToChar(1 - (Discrete -> GetChisquare())/Diff, 4 ) << "," ;
+	res_csv << fileTools.NumberToChar(1 - ((sumIT-1)/Discrete -> GetNDF())*(Discrete -> GetChisquare())/Diff, 4 ) << "," << fileTools.NumberToChar(  Discrete -> GetChisquare()/Discrete -> GetNDF(), 4 ) << ",";
+	res_csv << fileTools.NumberToChar( Background, 5 ) << "," << SDBackground << ",";
+	for( unsigned i = 0; i < ResSize; i++ )
 	{
-		res_csv << NumberToChar( Discrete -> GetParameter( 4 + 3*i ), 5) << ",";
+		res_csv << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*i ), 5) << ",";
 		res_csv << Discrete -> GetParError( 4 + 3*i ) << ",";
-		res_csv << NumberToChar( 2.355*Discrete -> GetParameter( 4 + 3*i ), 5 ) << ",";
+		res_csv << fileTools.NumberToChar( 2.355*Discrete -> GetParameter( 4 + 3*i ), 5 ) << ",";
 		res_csv << 2.355*Discrete -> GetParError( 4 + 3*i ) << ",";
-		res_csv << NumberToChar( GetIntensityParameterNew( ResolutionsFromFit, 3, 3, i+1 ),5 ) << ",";
+		res_csv << fileTools.NumberToChar( GetIntensityParameterNew( ResolutionsFromFit, 3, 3, i+1 ),5 ) << ",";
 		res_csv << GetIntensityParameterErrorNew( ResolutionsFromFitErrors, i+1 ) << ",";
-		res_csv << NumberToChar( Discrete -> GetParameter( 6 + 3*i ), 5 ) << ",";
+		res_csv << fileTools.NumberToChar( Discrete -> GetParameter( 6 + 3*i ), 5 ) << ",";
 		res_csv << Discrete -> GetParError( 6 + 3*i ) << ",";
 	}
 	res_csv << ",";
 	if( pPsIndex + 1 )
 	{
 		unsigned j = pPsIndex;
-		res_csv << NumberToChar( Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*Resolution.size() + 2*j ) << ",";
-		res_csv << NumberToChar( pPsIntensity, 5) << ",";
-		res_csv << NumberToChar( pPsIntensity * 100, 5) << ",";
-		res_csv << NumberToChar( pPsIntensity * 100/(1-FixedFixedIntensity), 5 ) << ",";
-		res_csv << NumberToChar( Discrete -> GetParameter( 5 + 3*Resolution.size() ) * 100, 5) << ",";
+		res_csv << fileTools.NumberToChar( Discrete -> GetParameter( 4 + 3*ResSize + 2*j ), 5) << "\t \t" << Discrete -> GetParError( 4 + 3*ResSize + 2*j ) << ",";
+		res_csv << fileTools.NumberToChar( pPsIntensity, 5) << ",";
+		res_csv << fileTools.NumberToChar( pPsIntensity * 100, 5) << ",";
+		res_csv << fileTools.NumberToChar( pPsIntensity * 100/(1-FixedFixedIntensity), 5 ) << ",";
+		res_csv << fileTools.NumberToChar( Discrete -> GetParameter( 5 + 3*ResSize ) * 100, 5) << ",";
 	}
 	NotFixedIterator = 0;
 	for( unsigned j = 0; j < Lifetimes.size(); j++ )
 	{
 		if( LifetimesFromDiscrete[ Order[j] ].Type == "f" )
 		{
-			res_csv << NumberToChar( LifetimesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( LifetimesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
-			res_csv << NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";		  
+			res_csv << fileTools.NumberToChar( LifetimesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( LifetimesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
+			res_csv << fileTools.NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";		  
 		}
 		else
 		{
-			res_csv << NumberToChar( LifetimesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( LifetimesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
-			res_csv << NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter /(1-FixedIntensity), 5) << ",";
-			res_csv << NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity /(1-FixedIntensity), 5) << ",";			
+			res_csv << fileTools.NumberToChar( LifetimesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( LifetimesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
+			res_csv << fileTools.NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter, 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity, 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Parameter /(1-FixedIntensity), 5) << ",";
+			res_csv << fileTools.NumberToChar( 100*IntensitiesFromDiscrete[ Order[j] ].Uncertainity /(1-FixedIntensity), 5) << ",";			
 		}
 	}
 	res_csv << "\n";
@@ -400,7 +427,7 @@ void ResultsSaver::saveResiduals( TH1F* histogram, double MinArgument, double Ma
 		}
 	}
 
-	TFile *residuals = new TFile( FileName, "update" );
+	TFile *residuals = new TFile( FileName.c_str(), "update" );
 	residuals -> mkdir( Path.c_str() ); 
 	residuals -> cd( Path.c_str() );  
         TGraph *residualsHisto = new TGraph( MaxBin - MinBin, ResArg_root, Residuals_root );
@@ -419,7 +446,7 @@ void ResultsSaver::saveResiduals( TH1F* histogram, double MinArgument, double Ma
 
 void ResultsSaver::saveLFvsIntensities( std::string FileName, std::string Path, std::string PathWithDate, std::vector< DiscreteFitResult > LifetimesFromDiscrete, std::vector< DiscreteFitResult > IntensitiesFromDiscrete )
 {
-	TFile *comparison = new TFile( FileName, "update" );
+	TFile *comparison = new TFile( FileName.c_str(), "update" );
 	comparison -> mkdir( Path.c_str() ); 
 	comparison -> cd( Path.c_str() ); 
 

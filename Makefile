@@ -1,23 +1,15 @@
 CC = g++
 
-CFLAGS = -c -Wall `root-config --cflags`
+CFLAGS = -Wall `root-config --cflags`
 
-CLIBS = `root-config --glibs` -lboost_system -lboost_filesystem
+CLIBS = `root-config --glibs` -lboost_system -lboost_filesystem `root-config --cflags`
 
 all: PALS_avalanche
 
-PALS_avalanche: PALS_avalanche.o PALS_avalanche_lib.o
-	$(CC) PALS_avalanche.o PALS_avalanche_lib.o -o PALS_avalanche.exe $(CLIBS) -std=c++11 -O2 -larmadillo -llapack -lblas
+PALS_avalanche: PALS_avalanche.cpp PALS_avalanche_lib.cpp PALS_avalanche_fileTools.cpp PALS_avalanche_fitFunctions.cpp PALS_avalanche_resultsSaver.cpp PALS_avalanche_libTools.cpp
+	$(CC) PALS_avalanche.cpp PALS_avalanche_lib.cpp PALS_avalanche_fileTools.cpp PALS_avalanche_fitFunctions.cpp PALS_avalanche_resultsSaver.cpp PALS_avalanche_libTools.cpp -o PALS_avalanche.exe $(CLIBS) -std=c++11
 
-PALS_avalanche.o: PALS_avalanche.cpp
-	$(CC) $(CFLAGS) PALS_avalanche.cpp -std=c++11 -O2 -larmadillo -llapack -lblas
-
-PALS_avalanche_lib.o: PALS_avalanche_lib.cpp
-	$(CC) $(CFLAGS) PALS_avalanche_lib.cpp -std=c++11 -O2 -larmadillo -llapack -lblas
-	
-			
 clean: 
-	rm -rf *o 
-	rm -rf *.png
-	rm -rf *.pdf
+	rm -rf *o
 	rm -rf *.root
+	rm -rf Results/

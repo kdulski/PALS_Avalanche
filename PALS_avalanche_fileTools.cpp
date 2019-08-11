@@ -77,18 +77,19 @@ std::vector<std::string> FileTools::GetFitDetails()
 	std::string option = "", option2 = "", option3 = "";  	//Sometimes there are three arguments in line to get -> (Lifetime Intensity Type)
 	std::cout << "-------------Processing fit details-------------" << std::endl;
 	std::ifstream fitDetails;				//Stream for reading file
-	fitDetails.open( pathForDetails );			// Opening the file with details of the analysis -> "FitDetails" - name of the file (Check)
+	fitDetails.open( FitDetailsFile );			// Opening the file with details of the analysis -> "FitDetails" - name of the file (Check)
 //-----------------------------------------------
 	std::cout << "-------------Reading the FitDetails-------------" << std::endl;
 	for( unsigned i=0; i<3; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'T', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );  
 	fitDetails >> option;		//Getting the type of data
-	if( option != "histogram" && option != "times" && != "ROOT" )	//Checking if type of data is provided correctly, one of the recognizable type - histogram or times
+
+	if( option != "histogram" && option != "times" && option != "ROOT" )	//Checking if type of data is provided correctly, one of the recognizable type - histogram or times
 	{
 		std::cout << "Check if there is everything all right in the FitDetails file" << std::endl;
 		std::cout << "Type of data is not one of correct types - 'histogram', 'times' or 'ROOT' " << std::endl;
@@ -98,7 +99,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -107,24 +108,26 @@ std::vector<std::string> FileTools::GetFitDetails()
  	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
-	fitDetails >> option;
-	FitDetailsData.push_back( option );
-	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
-		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
-	fitDetails >> option;
+	fitDetails >> option;	
 	FitDetailsData.push_back( option );
  	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
+	}
+	
+	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
+		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
+	fitDetails >> option;
+	FitDetailsData.push_back( option );
 	for( unsigned i=0; i<3; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'W', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -139,7 +142,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<3; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'I', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -154,7 +157,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<4; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -179,7 +182,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'F', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -204,7 +207,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'B', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -229,7 +232,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'B', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -244,7 +247,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -262,14 +265,14 @@ std::vector<std::string> FileTools::GetFitDetails()
 		if( question == 'n' )
 		{
 			std::cout << "So try changing line for proper value of iterations" << std::endl;
-            FitDetailsData[0] = FitDetailsData[0] + " --- bad Shift for Background ";
+			FitDetailsData[0] = FitDetailsData[0] + " --- bad Shift for Background ";
 		}
 	}
 	FitDetailsData.push_back( option );
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'E', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -278,7 +281,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'S', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -293,7 +296,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'F', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -302,7 +305,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -311,7 +314,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'D', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -320,13 +323,13 @@ std::vector<std::string> FileTools::GetFitDetails()
 	{
 		std::cout << "Check if there is everything all right in the FitDetails file" << std::endl;
 		std::cout << "FixGauss Option can be just one of the following - 'yes' or 'no' " << std::endl;
-        FitDetailsData[0] = FitDetailsData[0] + " --- bad Option for Fixing Resolution";
+		FitDetailsData[0] = FitDetailsData[0] + " --- bad Option for Fixing Resolution";
 	}
 	FitDetailsData.push_back( option );
 	for( unsigned i=0; i<4; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'S', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -337,22 +340,22 @@ std::vector<std::string> FileTools::GetFitDetails()
 	while( option != "-------" )
 	{
 		MaxIterator++;
-        lineNumber++;
+		lineNumber++;
 		if( MaxIterator > 9 )				//If this loop works too long, there is a chance that FitDetails file is corrupted. In other hand, program is not prepared for fitting more than 10 Resolution components
 		{
 			std::cout << "Check if there is everything all right in the FitDetails file" << std::endl;
 			std::cout << "Too much Resolution components (>9) or bad style of writing" << std::endl;
 			std::cout << "It should be like: [Number] [tabulator between them] [Number]" << std::endl;
 			std::cout << "and after writing all components ended by new line with -------	----------" << std::endl;
-            FitDetailsData[0] = FitDetailsData[0] + " --- bad Resolution Component nr " + NumberToChar( MaxIterator, 0 );
+			FitDetailsData[0] = FitDetailsData[0] + " --- bad Resolution Component nr " + NumberToChar( MaxIterator, 0 );
 		}
 		if( stod(option) > 0 && stod(option2) > 0 )	//Check if Resolution components are provided correctly
-            FitDetailsData.push_back( option + " " + option2 );
+			FitDetailsData.push_back( option + " " + option2 );
 		else
 		{
 			std::cout << "Intensity or Sigma can not be 0!!!!" << std::endl;
 			std::cout << "Error while reading component!!!!" << std::endl;
-            FitDetailsData[0] = FitDetailsData[0] + " --- bad Resolution Component nr " + NumberToChar( MaxIterator, 0 );
+			FitDetailsData[0] = FitDetailsData[0] + " --- bad Resolution Component nr " + NumberToChar( MaxIterator, 0 );
 		}
 		fitDetails >> option >> option2;
 	}
@@ -362,7 +365,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<7; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -371,14 +374,14 @@ std::vector<std::string> FileTools::GetFitDetails()
 	while( option != "-------" )
 	{
 		MaxIterator++;
-        lineNumber++;
+		lineNumber++;
 		if( MaxIterator > 9 )				//Similar as for Resolution components
 		{
 			std::cout << "Check if there is everything all right in the FitDetails file" << std::endl;
 			std::cout << "Too much Lifetime components (>9) or bad style of writing" << std::endl;
 			std::cout << "It should be like: [Number] [tabulator between them] [Number] [tabulator between them] [Type]" << std::endl;
 			std::cout << "and after writing all components ended by new line with -------	----- ----" << std::endl;
-            FitDetailsData[0] = FitDetailsData[0] + " --- bad Lifetime Component nr " + NumberToChar( MaxIterator, 0 );
+			FitDetailsData[0] = FitDetailsData[0] + " --- bad Lifetime Component nr " + NumberToChar( MaxIterator, 0 );
 		}
 		if( stod(option) > 0 && stod(option2) > 0 )
 			FitDetailsData.push_back( option + " " + option2 + " " + option3 );
@@ -386,7 +389,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 		{
 			std::cout << "Intensity or Lifetime can not be 0!!!!" << std::endl;
 			std::cout << "Error while reading component!!!!" << std::endl;
-            FitDetailsData[0] = FitDetailsData[0] + " --- bad Lifetime Component nr " + NumberToChar( MaxIterator, 0 );
+			FitDetailsData[0] = FitDetailsData[0] + " --- bad Lifetime Component nr " + NumberToChar( MaxIterator, 0 );
 		}
 		fitDetails >> option >> option2 >> option3;
 	}
@@ -394,7 +397,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -419,7 +422,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'H', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -444,7 +447,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<5; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'D', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -456,13 +459,13 @@ std::vector<std::string> FileTools::GetFitDetails()
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad Deconovolution Option ";
 	}
 	else if( option == "yes" )
-        FitDetailsData.push_back( NumberToChar( 1, 0 ) );
+		FitDetailsData.push_back( NumberToChar( 1, 0 ) );
 	else
-        FitDetailsData.push_back( NumberToChar( 0, 0 ) );
+		FitDetailsData.push_back( NumberToChar( 0, 0 ) );
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'H', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -477,7 +480,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -498,7 +501,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'L', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -513,7 +516,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'F', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -522,7 +525,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'F', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -537,7 +540,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'R', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -552,7 +555,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'D', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -567,7 +570,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'S', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -582,7 +585,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -597,7 +600,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'S', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -612,7 +615,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -627,7 +630,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'S', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -642,7 +645,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
-        lineNumber++;
+		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'D', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
@@ -654,9 +657,9 @@ std::vector<std::string> FileTools::GetFitDetails()
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad Type of Continous FIt ";
 	}
 	else if( option == "yes" )
-        FitDetailsData.push_back( NumberToChar( 1, 0 ) );
+		FitDetailsData.push_back( NumberToChar( 1, 0 ) );
 	else
-        FitDetailsData.push_back( NumberToChar( 0, 0 ) );
+		FitDetailsData.push_back( NumberToChar( 0, 0 ) );
     
 	return FitDetailsData;
 }

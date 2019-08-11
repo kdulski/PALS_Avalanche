@@ -7,7 +7,7 @@ none
 Name of the histogram in directory in ROOT file, if not ROOT file write [none]
 none
 Name of the file for serial analysis if not applicable write [no]
-no
+SerialTest
 ---
 What is the [BinWidth](double)
 0.02

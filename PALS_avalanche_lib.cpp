@@ -1,6 +1,6 @@
 #include "PALS_avalanche_lib.h"
 
-LifetimeComponent::LifetimeComponent()			//Initializing default values for Lifetime Component 
+/*LifetimeComponent::LifetimeComponent()			//Initializing default values for Lifetime Component 
 {
 	Type = "";
 	Lifetime = 0.1;
@@ -26,7 +26,7 @@ DiscreteFitResult::DiscreteFitResult( double Par, double Unc )
 	Parameter = Par;
 	Uncertainity = Unc;
 	Type = "nf";
-}
+}*/
 
 Fit::Fit()
 {
@@ -50,24 +50,25 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	NmbOfBins = 0;
 	NmbrOfIterations = 0;
 	VarLvl = 0;
+	NotFixedIterator = 0;
 //----------Vectors used in deconvolution procedure which use the results from discrete fit
 	LifetimesFromDiscrete.clear();
 	ResolutionFromDiscrete.clear();
 	OffsetsFromDiscrete.clear();
 	FractionsFromDiscrete.clear();
 	IntensitiesFromDiscrete.clear();
-	LifetimeGrid.clear();
-	GradientMatrix.clear();
+	//LifetimeGrid.clear();
+	//GradientMatrix.clear();
 	Residue.clear();
 //----------Numbers transferred in the process of deconvolution - continous fitting
-	iterator = 0;
-	ChiDiffBetweenIterations = 0.;
+	//iterator = 0;
+	//ChiDiffBetweenIterations = 0.;
 //-----------------------------------------------
-	fileTools(pathForDetails);
+	fileTools = FileTools(pathForDetails);
 	if( fileTools.FileCheck( pathForDetails ) )
 	{
 		std::cout << "FitDetails file visible" << std::endl;
-		if( FileCheck( path ) )
+		if( fileTools.FileCheck( path ) )
 		{
 			std::cout << path << " - file with data visible" << std::endl;
 			std::cout << "Perfect, we can work like that" << std::endl;
@@ -129,18 +130,18 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	int ComponentsShift = ComponentsMultiplicites[0] + ComponentsMultiplicites[1];
 	if( ComponentsMultiplicites[0]*ComponentsMultiplicites[1] == 0 )
 	{
-		std::cout << "Nor Resolution or Lifetime Components" << std::endl;
+		std::cout << "No Resolution or Lifetime Components" << std::endl;
 		return;
 	}
-	std::vector<double> ComponentsDetails;
+	std::vector< std::string > ComponentsDetails;
 	for( int i=0; i<ComponentsMultiplicites[0]; i++ )
 	{
-		ComponentsDetails = GetComponentDetails( DataAsString[17+i] ); 
+		ComponentsDetails = fileTools.GetComponentDetails( DataAsString[lineNumber+i] ); 
 		Resolution.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), "gauss" ) );
 	}
 	for( int i=0; i<ComponentsMultiplicites[1]; i++ )
 	{
-		ComponentsDetails = GetComponentDetails( DataAsString[17+ComponentsMultiplicites[0]+i] ); 
+		ComponentsDetails = fileTools.GetComponentDetails( DataAsString[lineNumber+ComponentsMultiplicites[0]+i] ); 
 		Lifetimes.push_back( LifetimeComponent( stod(ComponentsDetails[0]), stod(ComponentsDetails[1]), ComponentsDetails[2]) );
 	}
 	
@@ -150,7 +151,7 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	lineNumber++;
 	DecoOption = stoi( DataAsString[lineNumber+ComponentsShift] );
 	lineNumber++;
-	Scaler = stod( DataAsString[lineNumber+ComponentsShift] );
+	/*Scaler = stod( DataAsString[lineNumber+ComponentsShift] );
 	lineNumber++;
 	FracMinLF = stod( DataAsString[lineNumber+ComponentsShift] )/100.;
 	lineNumber++;
@@ -175,7 +176,7 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	ShapeOfComponent = DataAsString[lineNumber+ComponentsShift];
 	lineNumber++;
 	TypeOfContinousFit = stoi( DataAsString[lineNumber+ComponentsShift] );
-	lineNumber++;
+	lineNumber++;*/
 	
 	int ErrorTest = RenormalizeComponentsIntensities();
 	if( ErrorTest )
@@ -275,7 +276,7 @@ void Fit::RangeBackgroundData()
 	std::string slash = "/";
 	std::size_t dotPlace = Path.rfind(dot);
 	std::size_t slashPlace = Path.rfind(slash);
-	Path.replace( dotPlace, Path.length() - dotPlace, "_RF_" + NumberToChar(StartOfFitValue,2) + "_RT_" + NumberToChar(EndOfFitValue,2) );	//RF - Range_From, RT - Range_To, to distinguish differet ranges of the fit
+	Path.replace( dotPlace, Path.length() - dotPlace, "_RF_" + fileTools.NumberToChar(StartOfFitValue,2) + "_RT_" + fileTools.NumberToChar(EndOfFitValue,2) );	//RF - Range_From, RT - Range_To, to distinguish differet ranges of the fit
 	if( slashPlace != std::string::npos )
 	{
 		Path.erase( Path.begin(), Path.begin() + slashPlace + 1);
@@ -342,39 +343,74 @@ int Fit::Discrete()
 		if( Lifetimes[i].Type == "ps" )
 			pPsIndex = i;
 	}
-
-	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), oPsLFLimit );
+	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
 	
-	fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
-	fitTools.generateParameter( 0, Background, "Number of Gauss resolution components", Background - 3*SDBackground, Background + 3*SDBackground, "NoFixing" );
-	fitTools.generateParameter( 1, Resolution.size(), "Number of Gauss resolution components", 0., 0., "Fix" );
-	fitTools.generateParameter( 2, Lifetimes.size(), "Number of Lifetimes components", 0., 0., "Fix" );
+	//fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
+	
+	fitTools.generateParameter( 0, Background, "Background", Background - 3*SDBackground, Background + 3*SDBackground, "NoFixing" );
+	fitTools.generateParameter( 1, Resolution.size(), "Number of Gauss resolution components", 0., 10., "Fix" );
+	fitTools.generateParameter( 2, Lifetimes.size(), "Number of Lifetimes components", 0., 10., "Fix" );
 	fitTools.generateParameter( 3, area, "Total area of components", 0., 0., "NoLimits" );
 	fitTools.generateResolutionParameter( 4, Resolution, FixGauss, Arguments[ BinMax ] );
 	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
-	TF1 *Discrete = FitTools.getFitFunction();
-    
-	histogram -> Fit(Discrete,"RM");
-	std::cout << std::endl;
-	std::cout <<"Do not look on intensities of completely free parameters and resolution intensities"<< std::endl;
-	std::cout <<"They are normalized in the body of fitting function and at the end when saving results"<< std::endl;
-	std::cout << std::endl;
-    
-	for( unsigned iteration = 0; iteration < NmbrOfIterations; iter++ )
+	
+	fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
+	TF1 *Discrete = fitTools.getFitFunction();
+	
+	for( unsigned iteration = 0; iteration < NmbrOfIterations; iteration++ )
 	{
-		fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, Discrete, iter, VarLvl );
-		Discrete = FitTools.getFitFunction();
-		
+		//fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, iteration, VarLvl );
+		//Discrete = fitTools.getFitFunction();
+		for( unsigned j = 0; j < Lifetimes.size(); j++ )
+		{	
+			if( Lifetimes[j].Type == "f" )
+			{
+				Discrete -> FixParameter( 4 + 3*Resolution.size() + 2*j, Lifetimes[j].Lifetime );
+				Discrete -> FixParameter( 5 + 3*Resolution.size() + 2*j, Lifetimes[j].Intensity );
+			}
+			else if( Lifetimes[j].Type == "pf" )
+			{
+				Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) - VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j), Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) + VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 1 );			
+			}
+			else if( Lifetimes[j].Type == "lpf" )
+			{
+				Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) - VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j), Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) + VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) - VarLvl*Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j), Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) + VarLvl*Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
+			}
+			else if( Lifetimes[j].Type == "lf" )
+			{
+				Discrete -> FixParameter( 4 + 3*Resolution.size() + 2*j, Lifetimes[j].Lifetime );
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, 0, 1 );
+			}
+			else if( Lifetimes[j].Type == "lff" )
+			{
+				Discrete -> FixParameter( 4 + 3*Resolution.size() + 2*j, Lifetimes[j].Lifetime );
+				Discrete -> SetParLimits( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) - VarLvl*Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j), Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) + VarLvl*Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
+			}
+			else if( Lifetimes[j].Type == "ps" )
+			{
+				Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) - VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j), Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) + VarLvl*Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+				Discrete -> FixParameter( 5 + 3*Resolution.size() + 2*j, Lifetimes[j].Intensity );		  
+			}
+			else
+			{
+				Discrete -> SetParameter( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+				Discrete -> SetParameter( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
+			}
+		}
 		histogram -> Fit(Discrete,"RM");
+		//fitTools.Fit( histogram );
 		std::cout << std::endl;
 		std::cout <<"Do not look on intensities of completely free parameters and resolution intensities"<< std::endl;
 		std::cout <<"They are normalized in the body of fitting function and at the end when saving results"<< std::endl;
 		std::cout << std::endl;
 	}
-    
-	ResultsSaver Results( TypeOfFit );
-	Results.saveDiscreteFit( histogram, Discrete, "Results_from_fit.root", Path, "Results", PathWithDate );
 	
+	ResultsSaver Results( TypeOfFit );
+	
+	Results.saveDiscreteFit( histogram, Discrete, "Results_from_fit.root", Path, "Results", PathWithDate );
+
 	//AreaFromDiscrete = Discrete -> GetParameter( 3 );	If neede in future can be uncommented !?|?!
 	Background = Discrete -> GetParameter( 0 );
 	Double_t ResolutionsFromFit[22]; //Maximal number of Resolution component is 10 -> 20 parameters + tempfirst + numberofresolutioncomponents
@@ -403,7 +439,7 @@ int Fit::Discrete()
 			AfterFitIterator++;
 			FreeParameters[2*AfterFitIterator] = Discrete -> GetParameter( 4 + 3*Resolution.size() + 2*i );
 			FreeParameters[2*AfterFitIterator+1] = Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );
-			FreeParametersErrors[2*AfterFitIterator-1] = Discrete -> GetParameter( 5 + 3*Resolution.size() + 2*i );
+			FreeParametersErrors[2*AfterFitIterator-1] = Discrete -> GetParError( 4 + 3*Resolution.size() + 2*i );
 			FreeParametersErrors[2*AfterFitIterator] = Discrete -> GetParError( 5 + 3*Resolution.size() + 2*i );
 		}
 	}
@@ -442,11 +478,11 @@ int Fit::Discrete()
 		pPsIntensity += Discrete -> GetParameter( 5 + 3*Resolution.size() )*FreeIntensitiesTopPs*(1-FixedIntensities)/(1 + FreeIntensitiesTopPs*Discrete -> GetParameter( 5 + 3*Resolution.size() ) );
 	}
 	
-	std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete = Results.saveDiscreteFitResultsToTXTandExcel( Path, "Discrete_Fit_", PathWithDate, 
-								Discrete, Background, SDBackground, ResolutionsFromFit, ResolutionsFromFitErrors, 
-								pPsIndex, pPsIntensity, FreeParameters, FreeParametersErrors, 
-								FixedIntensities, FreeIntensitiesTopPs, FixedFixedIntensity, Lifetimes, 
-								oPsLFLimit, pPsLFLimit, NameOfTheFileForEXCEL);
+	std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete = Results.saveDiscreteFitResultsToTXTandExcel( "Results", "Discrete_Fit_", PathWithDate, 
+								Discrete, histogram, Background, SDBackground, ResolutionsFromFit, ResolutionsFromFitErrors, 
+								FixedIterator, pPsIndex, pPsIntensity, FreeParameters, FreeParametersErrors, 
+								FixedIntensities, FreeIntensitiesTopPs, FixedFixedIntensity, FreeIntensities, Lifetimes, 
+								Arguments[ Range_From ], Arguments[ Range_To ], oPsLFLimit, pPsLFLimit, NameOfTheFileForEXCEL, TypeOfFit);
 	Results.saveResiduals( histogram, Arguments[ Range_From ], Arguments[ Range_To ], Range_From, Range_To, Discrete, "Residuals.root", Path, PathWithDate );
 	Results.saveLFvsIntensities( "LF_vs_In.root", Path, PathWithDate, ResultsDiscrete[0], ResultsDiscrete[1] );
 	
@@ -566,8 +602,12 @@ void Fit::SortLifetimesByType()
 	for( unsigned i=0; i<Lifetimes.size(); i++ )
 	{
 		if( Lifetimes[i].Type == "nf"  )
+		{
 			NewLifetimes.push_back( Lifetimes[i] );
+			NotFixedIterator++;
+		}
 	}
+	FixedIterator = Lifetimes.size() - NotFixedIterator;
 	Lifetimes = NewLifetimes;
 }
 
@@ -585,7 +625,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		TFile* file1 = new TFile( path.c_str(), "READ" );
 		TDirectory *dir;
 		if( ROOTDirectory != "none" )
-			file1->GetObject(ROOTDirectory,dir);
+			file1->GetObject(ROOTDirectory.c_str(),dir);
 		
 		TH1D* histo1 = (TH1D*) dir->Get( ROOTHistogram.c_str() );
 		
@@ -599,7 +639,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		else
 		{
 			double RebinNumber = BinWidth/BinWidthOfHisto;
-			double decimals = RebinNumber % 1;
+			double decimals = std::fmod( RebinNumber, 1 );
 			if( decimals > 0.01 )
 			{
 				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::cout;
@@ -697,4 +737,22 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		}
 		data.close();
 	}
+}
+
+TH1F* FillHistogram( std::string Name, int BinNumber, double Start, double Stop, std::vector<double>& Data )
+{
+        TH1F *histogram = new TH1F( Name.c_str(), Name.c_str(), BinNumber, Start, Stop );
+        for( unsigned i = 0; i < Data.size(); i++ )
+                histogram -> Fill( Data[i], 1 );
+        return histogram;
+}
+
+const std::string GetTime()
+{
+	time_t now = time(0);
+	struct tm tstruct;
+	char buf[80];
+	tstruct = *localtime(&now);
+	strftime( buf, sizeof(buf), "%Y-%m-%d_Time:%X", &tstruct );
+	return buf;
 }
