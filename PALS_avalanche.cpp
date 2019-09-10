@@ -1,5 +1,6 @@
 #include "PALS_avalanche_lib.h"
-
+#include <chrono>
+#include <unistd.h>
 	
 int main( int argc, char* argv[] ) 		//First argument - File with data, second - File with FitDetails(Path to it), third for more experienced users -> no argument Full Simplex, "old" old type, no simplex for Lifetime components, "exp" simplex for resolution but predefined
 {
@@ -8,6 +9,8 @@ int main( int argc, char* argv[] ) 		//First argument - File with data, second -
 		std::cout << "Program is not using any more external arguments, so do not be officious!" << std::endl;
 			return 0;
 	}                                                               //Argument check							//Start counting time - control purpose
+	  
+    auto start = std::chrono::steady_clock::now();
 	  
 	std::string TimesPath = argv[1];                                    //Calculated times
 	int DeconvolutionOption;
@@ -44,6 +47,9 @@ int main( int argc, char* argv[] ) 		//First argument - File with data, second -
 		//if( DeconvolutionOption )
 		//	fit.Deconvolution();
 	}
+	auto end = std::chrono::steady_clock::now();
+    std::cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " miliseconds" << std::endl;
+    
 	return DeconvolutionOption;
 }
 

@@ -255,18 +255,28 @@ void Fit::RangeBackgroundData()
 	int iterator = 0;						//Iterator that counts the shift from the bin with maximal content for searching for the last ans first bin for fitting
 	while( pointToFitCheck )			//In general first loop should find the bin for the start of the fit range - because it is closer to maximum(starting point)
 	{
-		iterator++;
-		if( pointFromFitCheck && (Values[BinMax - iterator] < StartOfFitValue*(Values[BinMax] - Background)) ) 		//-Background to normalize the height of bin contents
+		iterator++;  
+        if( pointFromFitCheck && iterator >= BinMax )
+        {
+            pointFromFitCheck = 0;			//First bin for fitting is found, first check done
+            Range_From = 0;                  
+        }
+		else if( pointFromFitCheck && (Values[BinMax - iterator] - Background < StartOfFitValue*(Values[BinMax] - Background)) ) 		//-Background to normalize the height of bin contents
 		{
-			pointFromFitCheck = 0;			//First bin for fitting is found, first check done
-			Range_From = BinMax - iterator;
+                pointFromFitCheck = 0;			//First bin for fitting is found, first check done
+                Range_From = BinMax - iterator;
 		}
-		if( Arguments[BinMax + iterator] >= EndOfFitValue )
+        if( BinMax + iterator >= Arguments.size() )
+        {
+            pointToFitCheck = 0;			//Last bin for fitting is found, second check done
+            Range_To = Arguments.size() - 1;
+        }
+		else if( Arguments[BinMax + iterator] >= EndOfFitValue )
 		{
-			pointToFitCheck = 0;			//Last bin for fitting is found, second check done
-			Range_To = BinMax + iterator;
+            pointToFitCheck = 0;			//Last bin for fitting is found, second check done
+            Range_To = BinMax + iterator;
 		}
-	}	
+	}
 	std::cout << "Max bin in [Argument] [Value]\t \t \t \t \t \t" << Arguments[BinMax] << "   " << Values[BinMax] << std::endl;
 	std::cout << "[Beginning of the range - Bin] [End of the range - Bin] \t \t" << Range_From << "   " << Range_To << std::endl;
 	std::cout << "[Beginning of the range - Argument] [End of the range - Argument] \t" << Arguments[Range_From] << "   " << Arguments[Range_To] << std::endl;
@@ -343,6 +353,8 @@ int Fit::Discrete()
 		if( Lifetimes[i].Type == "ps" )
 			pPsIndex = i;
 	}
+	std::cout << pPsIndex << " tah " << std::endl;
+	
 	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
 	
 	//fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
@@ -355,12 +367,13 @@ int Fit::Discrete()
 	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
 	
 	fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
-	TF1 *Discrete = fitTools.getFitFunction();
+    TF1 *Discrete = fitTools.getFitFunction();
 	
 	for( unsigned iteration = 0; iteration < NmbrOfIterations; iteration++ )
 	{
 		//fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, iteration, VarLvl );
-		//Discrete = fitTools.getFitFunction();
+		Discrete = fitTools.getFitFunction();
+       // histogram -> Fit(Discrete,"RM");
 	  
 		// Must be like that \/ because root is unable to fit properly outside, like in created class FitFunction
 		for( unsigned j = 0; j < Lifetimes.size(); j++ )
@@ -398,6 +411,7 @@ int Fit::Discrete()
 			else
 			{
 				Discrete -> SetParameter( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+                Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, 0.08, 142 );
 				Discrete -> SetParameter( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
 			}
 		}
@@ -634,7 +648,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		double BinWidthOfHisto = histo1->GetBinCenter(2) - histo1->GetBinCenter(1);     //Leaving Underflow bin -> 0
 		if( BinWidth < BinWidthOfHisto )
 		{
-			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::cout;
+			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::endl;
 			std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
 			return;
 		}
@@ -644,7 +658,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 			double decimals = std::fmod( RebinNumber, 1 );
 			if( decimals > 0.01 )
 			{
-				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::cout;
+				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::endl;
 				std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
 				return;               
 			}

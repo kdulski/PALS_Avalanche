@@ -4,7 +4,7 @@ FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResol
 {
 	if( Approach == "" )
 	{
-		if( pPsOption ) // pPs option equal to zero means that there is pPs
+		if( pPsOption == 0 ) // pPs option equal to zero means that there is pPs
 		{
 			//SelectedFunction = & FitFunction::DiscreteFitFunctionNoPs;
 			Discrete = new TF1( "Discrete", DiscreteFitFunctionNoPs, HistoStart, HistoEnd, NumberOfParameters );
@@ -14,12 +14,12 @@ FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResol
 		{
 			//SelectedFunction = & FitFunction::DiscreteFitFunctionPs;
 			Discrete = new TF1( "Discrete", DiscreteFitFunctionPs, HistoStart, HistoEnd, NumberOfParameters );
-			Discrete -> SetNpx( NumberOfPointsForDrawing );
+			Discrete -> SetNpx( NumberOfPointsForDrawing );          
 		}
 	}
 	else if( Approach == "exp" )
 	{
-		if( pPsOption >= 0 ) // pPs option equal to zero means that there is pPs
+		if( pPsOption == 0 ) // pPs option equal to zero means that there is no pPs
 		{
 			if( NumberOfResolutionComp == 1 )
 			{
@@ -149,8 +149,7 @@ void FitFunction::generateInitLifetimeParameter( unsigned NumberOfFirstParameter
 		else
 		{
 			NotFixedIterator++;
-			generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + fileTools.NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "NoFixing" );
-
+			generateParameter( NumberOfFirstParameter + 2*j, Lifetimes[j].Lifetime, ("Lifetime for " + fileTools.NumberToChar( j+1, 0 ) + " Component").c_str(), 0.08, 142., "Fix" );
 			if( TypeOfFit == "" )
 			{
 				if( NotFixedIterator == 1 )
@@ -251,7 +250,7 @@ void FitFunction::Fit( TH1F* histogram )
 
 Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
-	Double_t sum = 0., FixedIntensity = 0.;	
+	Double_t sum = 0., FixedIntensity = 0.;
 	for( unsigned i = 0; i < P[1]; i++ )
 	{
 		for( unsigned j = 0; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j++ )
