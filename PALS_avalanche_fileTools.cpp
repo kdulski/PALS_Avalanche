@@ -103,16 +103,37 @@ std::vector<std::string> FileTools::GetFitDetails()
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
-	fitDetails >> option;
-	FitDetailsData.push_back( option );
- 	for( unsigned i=0; i<2; i++ ) //Leaving header
+	for( unsigned i=0; i<lineWidth; i++ )
+	{
+		line[i] = '\n';
+	}
+	char lineTemp[lineWidth];
+	for( unsigned i=0; i<lineWidth; i++ )
+	{
+		lineTemp[i] = '\n';
+	}
+	fitDetails.getline( lineTemp, lineWidth );
+	std::string optionTemp = "";
+	int test000 = 1;
+	while( test000 )
+	{
+		optionTemp = optionTemp + lineTemp[test000-1];
+		//std::cout << line[test000-1] << std::endl;
+		test000++;
+		if( lineTemp[test000-1] == '\n' )
+			test000 = 0;
+	}
+	optionTemp.erase( optionTemp.end()-1, optionTemp.end() );
+	std::cout << optionTemp << std::endl;
+	FitDetailsData.push_back( optionTemp );
+ 	for( unsigned i=0; i<1; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );
 		lineNumber++;
 	}
 	if( CheckTheLine( line[0], 'N', lineNumber ) == 0 )
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
-	fitDetails >> option;	
+	fitDetails >> option;
 	FitDetailsData.push_back( option );
  	for( unsigned i=0; i<2; i++ ) //Leaving header
 	{
