@@ -347,6 +347,15 @@ std::vector<std::string> FileTools::GetFitDetails()
 		FitDetailsData[0] = FitDetailsData[0] + " --- bad Option for Fixing Resolution";
 	}
 	FitDetailsData.push_back( option );
+    for( unsigned i=0; i<2; i++ ) //Leaving header
+	{
+		fitDetails.getline( line, lineWidth );
+		lineNumber++;
+	}
+	if( CheckTheLine( line[0], 'F', lineNumber ) == 0 )
+		FitDetailsData[0] = FitDetailsData[0] + " --- bad line nr " + NumberToChar( lineNumber, 0 );
+	fitDetails >> option;		//Getting the Center for First Bin	
+	FitDetailsData.push_back( option );
 	for( unsigned i=0; i<4; i++ ) //Leaving header
 	{
 		fitDetails.getline( line, lineWidth );

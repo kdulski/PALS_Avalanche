@@ -54,6 +54,7 @@ class Fit
 		std::string Path;
 		std::string PathWithDate;
 		std::string TypeOfData;
+        int ROOTFileTestValue;
 		std::string ROOTDirectory;
 		std::string ROOTHistogram;
 		std::string NameOfTheFileForEXCEL;
@@ -69,6 +70,7 @@ class Fit
 		double FirstBinCenter;
 		double LastBinCenter;
 		std::string FixGauss;
+        int BackgroundVarLvl;
 		std::vector<LifetimeComponent> Lifetimes;
 		std::vector<LifetimeComponent> LifetimesNotFixed;
 		std::vector<LifetimeComponent> Resolution;

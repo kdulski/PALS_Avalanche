@@ -36,6 +36,7 @@ Fit::Fit()
 Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType )
 {							//Getting Times and fitting details from file provided by user and FitDetails file
 	TypeOfFit = FitType;
+    ROOTFileTestValue = ROOTFileTest;
 //-----------------------------------------------Clearing the variables used in the process of analysis of PAL spectrum
 //-----------------------------------------------(Because reasons and to be sure that it is blank)
 	Path = path;
@@ -125,6 +126,8 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	lineNumber++;
 	FixGauss = DataAsString[lineNumber];
 	lineNumber++;
+    BackgroundVarLvl = stod( DataAsString[lineNumber] );
+    lineNumber++;
     
 	std::vector<int> ComponentsMultiplicites = fileTools.GetComponentsMultiplicities( DataAsString[1] );
 	int ComponentsShift = ComponentsMultiplicites[0] + ComponentsMultiplicites[1];
@@ -291,7 +294,10 @@ void Fit::RangeBackgroundData()
 	{
 		Path.erase( Path.begin(), Path.begin() + slashPlace + 1);
 	}
-	PathWithDate = Path + "_Date:" + GetTime();
+	if( ROOTFileTestValue )
+        PathWithDate = Path + ROOTHistogram + "_Date:" + GetTime();
+    else
+        PathWithDate = Path + "_Date:" + GetTime();
 	if( NameOfTheFileForEXCEL == "no" )
 		NameOfTheFileForEXCEL = Path;
 }
