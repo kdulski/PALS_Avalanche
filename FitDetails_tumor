@@ -36,6 +36,8 @@ Last Bin Center - For the sake of range for histogram data type(double)
 120
 Do You want to fix the resolution component(yes/no)
 no
+For how many sigma Background can vary (BG +- N*sigma) (int)
+3
 ------------------
 Resolution Components estimated as Gauss distributions
 Sigma(double)[ns]	Intensity(from 0 to 1, all sum up to 1)

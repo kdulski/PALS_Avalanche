@@ -68,8 +68,6 @@ Double_t DiscreteFitFunctionNoPs_forTests( Double_t *A, Double_t *P );
 
 Double_t ExMoGa( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
 Double_t ExMoGa_2( Double_t A, Double_t P1, Double_t P2, Double_t P3, Double_t P4 );
-double GaussDistr( double X, double Mean, double Sigma );
-double LogGaussDistr( double X, double Mean, double Sigma );
 
 Double_t SetIntensityParameter( std::vector<LifetimeComponent> Parameters, unsigned NumberOfParameter );
 Double_t GetIntensityParameter( std::vector<Double_t> Parameters, unsigned NumberOfParameter );

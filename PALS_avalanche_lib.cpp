@@ -36,6 +36,7 @@ Fit::Fit()
 Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType )
 {							//Getting Times and fitting details from file provided by user and FitDetails file
 	TypeOfFit = FitType;
+    ROOTFileTestValue = ROOTFileTest;
 //-----------------------------------------------Clearing the variables used in the process of analysis of PAL spectrum
 //-----------------------------------------------(Because reasons and to be sure that it is blank)
 	Path = path;
@@ -151,7 +152,7 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	lineNumber++;
 	DecoOption = stoi( DataAsString[lineNumber+ComponentsShift] );
 	lineNumber++;
-	/*Scaler = stod( DataAsString[lineNumber+ComponentsShift] );
+	Scaler = stod( DataAsString[lineNumber+ComponentsShift] );
 	lineNumber++;
 	FracMinLF = stod( DataAsString[lineNumber+ComponentsShift] )/100.;
 	lineNumber++;
@@ -176,7 +177,7 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	ShapeOfComponent = DataAsString[lineNumber+ComponentsShift];
 	lineNumber++;
 	TypeOfContinousFit = stoi( DataAsString[lineNumber+ComponentsShift] );
-	lineNumber++;*/
+	lineNumber++;
 	
 	int ErrorTest = RenormalizeComponentsIntensities();
 	if( ErrorTest )
@@ -255,18 +256,28 @@ void Fit::RangeBackgroundData()
 	int iterator = 0;						//Iterator that counts the shift from the bin with maximal content for searching for the last ans first bin for fitting
 	while( pointToFitCheck )			//In general first loop should find the bin for the start of the fit range - because it is closer to maximum(starting point)
 	{
-		iterator++;
-		if( pointFromFitCheck && (Values[BinMax - iterator] < StartOfFitValue*(Values[BinMax] - Background)) ) 		//-Background to normalize the height of bin contents
+		iterator++;  
+        if( pointFromFitCheck && iterator >= BinMax )
+        {
+            pointFromFitCheck = 0;			//First bin for fitting is found, first check done
+            Range_From = 0;                  
+        }
+		else if( pointFromFitCheck && (Values[BinMax - iterator] - Background < StartOfFitValue*(Values[BinMax] - Background)) ) 		//-Background to normalize the height of bin contents
 		{
-			pointFromFitCheck = 0;			//First bin for fitting is found, first check done
-			Range_From = BinMax - iterator;
+                pointFromFitCheck = 0;			//First bin for fitting is found, first check done
+                Range_From = BinMax - iterator;
 		}
-		if( Arguments[BinMax + iterator] >= EndOfFitValue )
+        if( BinMax + iterator >= Arguments.size() )
+        {
+            pointToFitCheck = 0;			//Last bin for fitting is found, second check done
+            Range_To = Arguments.size() - 1;
+        }
+		else if( Arguments[BinMax + iterator] >= EndOfFitValue )
 		{
-			pointToFitCheck = 0;			//Last bin for fitting is found, second check done
-			Range_To = BinMax + iterator;
+            pointToFitCheck = 0;			//Last bin for fitting is found, second check done
+            Range_To = BinMax + iterator;
 		}
-	}	
+	}
 	std::cout << "Max bin in [Argument] [Value]\t \t \t \t \t \t" << Arguments[BinMax] << "   " << Values[BinMax] << std::endl;
 	std::cout << "[Beginning of the range - Bin] [End of the range - Bin] \t \t" << Range_From << "   " << Range_To << std::endl;
 	std::cout << "[Beginning of the range - Argument] [End of the range - Argument] \t" << Arguments[Range_From] << "   " << Arguments[Range_To] << std::endl;
@@ -343,6 +354,8 @@ int Fit::Discrete()
 		if( Lifetimes[i].Type == "ps" )
 			pPsIndex = i;
 	}
+	std::cout << pPsIndex << " pPsindex test " << std::endl;
+	
 	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
 	
 	//fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
@@ -354,13 +367,15 @@ int Fit::Discrete()
 	fitTools.generateResolutionParameter( 4, Resolution, FixGauss, Arguments[ BinMax ] );
 	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
 	
-	fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
-	TF1 *Discrete = fitTools.getFitFunction();
-	
+	//fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
+    TF1 *Discrete = fitTools.getFitFunction();
+    histogram -> Fit(Discrete,"RM");
+    
 	for( unsigned iteration = 0; iteration < NmbrOfIterations; iteration++ )
 	{
 		//fitTools.generateIterLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed, iteration, VarLvl );
-		//Discrete = fitTools.getFitFunction();
+	//	Discrete = fitTools.getFitFunction();
+       // histogram -> Fit(Discrete,"RM");
 	  
 		// Must be like that \/ because root is unable to fit properly outside, like in created class FitFunction
 		for( unsigned j = 0; j < Lifetimes.size(); j++ )
@@ -398,6 +413,7 @@ int Fit::Discrete()
 			else
 			{
 				Discrete -> SetParameter( 4 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(4 + 3*Resolution.size() + 2*j) );
+                Discrete -> SetParLimits( 4 + 3*Resolution.size() + 2*j, 0.08, 142 );
 				Discrete -> SetParameter( 5 + 3*Resolution.size() + 2*j, Discrete -> GetParameter(5 + 3*Resolution.size() + 2*j) );
 			}
 		}
@@ -487,8 +503,185 @@ int Fit::Discrete()
 								Arguments[ Range_From ], Arguments[ Range_To ], oPsLFLimit, pPsLFLimit, NameOfTheFileForEXCEL, TypeOfFit);
 	Results.saveResiduals( histogram, Arguments[ Range_From ], Arguments[ Range_To ], Range_From, Range_To, Discrete, "Residuals.root", Path, PathWithDate );
 	Results.saveLFvsIntensities( "LF_vs_In.root", Path, PathWithDate, ResultsDiscrete[0], ResultsDiscrete[1] );
+    
+    LifetimesFromDiscrete = ResultsDiscrete[0];
+	IntensitiesFromDiscrete = ResultsDiscrete[1];
+	ResolutionFromDiscrete = ResultsDiscrete[2];
+	OffsetsFromDiscrete = ResultsDiscrete[3];
+	FractionsFromDiscrete = ResultsDiscrete[4];
 	
 	return DecoOption;
+}
+
+void Fit::Deconvolution()
+{
+	if( Resolution.size()*Lifetimes.size() == 0 )				//Test if the reading FitDetails file and data file past properly
+	{
+		return;
+	}
+	
+	std::cout << "-------------Initializing LifetimeGrid-------------" << std::endl;
+	double MaxLF = FindMaxLF();		//Looking for minimal and maximal value of lifetimes from Discrete procedure of fitting
+	double MinLF = FindMinLF();		//in order to describe whole LifetimeGrid as the range between FracMinLF*MinLF and FracMaxLF*MaxLF
+	
+	int StartPoint = 0;			//Iterator that characterizes start point of LifetimeGrid
+	int cond = 1;				//Condition that control process of finding LifetimeGrid - is zero if whole LifetimeGrid is as user wanted
+	unsigned SizeOfLFGrid = 1;		//Variable that stores the information about size of LifetimeGrid
+	
+    while( cond )
+	{
+		if( exp((double)( StartPoint )/Scaler)-1 > FracMinLF*MinLF )		//If Value of StartPoint will be such, that it will be greater than lower side of range of LifetimeGrid, then beginning of LifetimeGrid is found
+		{
+			if( exp((double)( StartPoint + SizeOfLFGrid )/Scaler)-1 < FracMaxLF*MaxLF )	//Looking next for the end of LifetimeGrid as the minmal point that fulfills condition  in if()
+				SizeOfLFGrid++;
+			else
+				cond = 0;
+		}
+		else
+			StartPoint++;
+	}
+//-----------------------------------------------
+	using namespace arma;			//Creating vectors for continous fitting procedure - It uses Armadillo software -> arma is the namespace for them
+	vec LFGrid_(SizeOfLFGrid);		//Definiton of mock vector that will be next written to Fit class vector without "_"
+	vec Inten(SizeOfLFGrid);		//Vector of Intensities of each Lifetime in LifetimeGrid
+	Double_t LifetimeGrid_root[SizeOfLFGrid], Intensities_root[SizeOfLFGrid];	//This Vectors are introduced in order to plot LifetimeGrid and it intesities in root Graph
+	for( unsigned i=0; i<SizeOfLFGrid; i++ )
+	{
+		LifetimeGrid.push_back( exp((double)(i+StartPoint)/Scaler)-1 );	
+		LFGrid_(i) = exp((double)(i+StartPoint)/Scaler)-1 ;
+	}
+	LFGrid = LFGrid_;
+    //-----------------------------------------------
+	std::cout << "-------------Smoothing histogram-------------" << std::endl;
+	LinearFilter( LinFilterRange );				//Smoothing the histogram more - in order to obtain better distribution of lifetimes
+//-----------------------------------------------	
+    	std::vector < double > TempArg, TempVal;		//Temporary vectors for trimming Arguments and Values vectors, only to real range of fitting
+	auto maxValueIterator = std::distance(Values.begin(), std::max_element(Values.begin()+Range_From, Values.end() - ShiftForBackgroundEstimation)); 	//Finding maxmimum of the distribution to fit only from the maximum to the Range_To (To avoid resolution uncertainity)
+	
+	for( unsigned i=0; i<Arguments.size() - ShiftForBackgroundEstimation; i++ )
+	{
+		if( i >= maxValueIterator + MaxShiftForDeco && Arguments[i] <= EndOfFitMultiplicity*MaxLF  )
+		{	
+			TempArg.push_back( Arguments[i] );
+			TempVal.push_back( Values[i] );		
+		}
+	}
+	Values = TempVal;			//Setting Arguments and Values vectors as trimmed vectors only to interesting range, where user wants to fit
+	Arguments = TempArg;
+//-----------------------------------------------	
+	std::cout << "-------------Initializing gradient base for continous fitting-------------" << std::endl;
+	double sum = 0.;			//sum is the temporary variable for calculations of gradient matrix components
+	mat GradMax_( LifetimeGrid.size(), Arguments.size() );		//As in LFGrid_ situation, creating temporary matrix for Jacobian matrix of fitting function (It should have )
+	Double_t par[4];			//Parameter container created such, that function defined to fit in discrete mode is compatible with continous function
+						//0 -> X of histogram; 1 -> Sigma of resolution component; 2 -> Offset of resolution component; 3 -> Lifetime
+	for( unsigned i=0; i<LifetimeGrid.size(); i++ )			//Gradient calculated for all Lifetimes in LifetiemsGrid
+	{
+		Intensities_afterIter.push_back( LifetimeGrid[i] );	//First filling of container for Intensities (Y of Lifetime distribution)
+		Inten(i) = LifetimeGrid[i];				//First filling of container for Lifetimes (X of Lifetime distribution)
+		for( unsigned j=0; j<Arguments.size(); j++ )		//Jacobian calculated for all Arguments in histogram (cutted only up to Fit Range) - Jacobian dimension -> LifetimeGrid x Arguments
+		{
+			sum = 0;					//sum over all Resolution components
+			for( unsigned k=0; k<ResolutionFromDiscrete.size(); k++ )
+			{
+				par[0] = Arguments[j];
+				par[1] = ResolutionFromDiscrete[k].Parameter;
+				par[2] = OffsetsFromDiscrete[k].Parameter;
+				par[3] = LifetimeGrid[i];
+				//sum += AreaFromDiscrete*FractionsFromDiscrete[k].Parameter*ExMoGa( par[0], par[1], par[2], par[3], 1 );		//Derrivative of Exponentially modified Gaussian over Intensity is just ExMoGa with intensity 1
+				sum += FractionsFromDiscrete[k].Parameter*ExMoGa( par[0], par[1], par[2], par[3], 1 );		//Derrivative of Exponentially modified Gaussian over Intensity is just ExMoGa with intensity 1
+				if( isnan(sum) )			//Sometimes values are close to zero -> error while calculating returning nan
+					sum = 0;
+			}
+			GradMax_( i,j ) = sum;
+		}
+	}
+	GradMax = GradMax_;
+						//Preparing first step of continous fit -> Assuming that Lifetime distribution is a sum of Gaussian/LogGaussians components -> Finding optimal sigmas
+	SSig.clear();				//Clearing container for sigmas, that will vary in the first step of continous fitting
+	for( unsigned j=0; j<LifetimesFromDiscrete.size(); j++ )
+	{
+		SSig.push_back( LifetimesFromDiscrete[j].Parameter*SigmasDefaultFraction );		//First values of sigmas 
+	}
+	ChiDiffBetweenIterations = 0;
+
+    DecoTools.CopyParameter( LifetimeGrid, LifetimesFromDiscrete, IntensitiesFromDiscrete, Values, GradMax, Background, SDBackground, oPsLFLimit, NumberOfPreIterations, NumberOfIterations, ChiDiffBetweenIterations, Intensities_afterIter );
+	AreaParameter = DecoTools.FindingOptimalAreaParameter( SSig );
+    double SigmaParameter = DecoTools.FindingOptimalSigmaParameter( SSig, ShapeOfComponent );
+    for( unsigned j=0; j<LifetimesFromDiscrete.size(); j++ )
+	{
+		SSig[j] = LifetimesFromDiscrete[j].Parameter*SigmasDefaultFraction*SigmaParameter;    //Second values of sigmas 
+	}
+    
+    DecoTools.ClearIteratorAndChiSQ( 1 ); //0 only iterator, 1 iterator + ChiDiffBetweenIterations, 2 ChiDiffBetweenIterations
+    std::cout << "PreIteration status " <<  DecoTools.PreIterate( SSig, StepForPreIteration, 100, 0., ShapeOfComponent ) << std::endl;	
+                                                        //Finding optimal sigmas -> Measure of goddnes of fit -> ChiSq_pre
+                                                        //1 argument -> Container for sigmas; 2 -> step in changes of sigmas; 
+                                                        //3 -> Lambda which controls the impact of Gauss-Newton method (small lambda) and max damping method (big lambda); 4 -> Previous Chi
+                                                        //5 -> Type of Component Estimation
+	ChiDiffBetweenIterations = 0.;
+    Intensities_afterIter = DecoTools.GetIntensities();
+    DecoTools.ClearIteratorAndChiSQ( 1 );
+   
+    double ChiSq = -0.01;			//Second step is done until condition on Chisquared is fulfilled -> Then the Iterate procedure is returning negatvie value which stops this loop
+	while( ChiSq <= 0 )
+	{
+		for( unsigned p=0; p<LifetimeGrid.size(); p++ )
+			Inten(p) = Intensities_afterIter[p];			//Copying intensities from preiterations to new vector used in Iterate procedure
+		if( TypeOfContinousFit )
+			ChiSq = DecoTools.IterateExp( Inten, StepForIteration, -ChiSq, 0. );
+		else
+			ChiSq = DecoTools.Iterate( Inten, StepForIteration, -ChiSq, 0. );
+        Intensities_afterIter = DecoTools.GetIntensities();
+        DecoTools.ClearIteratorAndChiSQ( 2 );
+	}
+	ChiSq = -0.01;
+    Intensities_afterIter = DecoTools.GetIntensities();
+	for( unsigned p=0; p<LifetimeGrid.size(); p++ )
+	{
+		if( LifetimeGrid[p] < 5*MaxLF && LifetimeGrid[p] > 0.5*MinLF )
+			Inten(p) = Intensities_afterIter[p];			//Copying intensities from preiterations to new vector used in Iterate procedure
+		else
+			Inten(p) = 0;
+	}
+	while( ChiSq <= 0 )
+	{
+		for( unsigned p=0; p<LifetimeGrid.size(); p++ )
+			Inten(p) = Intensities_afterIter[p];			//Copying intensities from preiterations to new vector used in Iterate procedure
+		if( TypeOfContinousFit )
+			ChiSq = DecoTools.IterateExp( Inten, StepForIteration, -ChiSq, 0. );
+		else
+			ChiSq = DecoTools.Iterate( Inten, StepForIteration, -ChiSq, 0. );
+        Intensities_afterIter = DecoTools.GetIntensities();
+        DecoTools.ClearIteratorAndChiSQ( 2 );
+	}
+	
+    for( unsigned k=0; k<SizeOfLFGrid; k++ )
+	{
+		LifetimeGrid_root[k] = LifetimeGrid[k];
+        Intensities_root[k] = Intensities_afterIter[k];
+        Inten(k) = Intensities_afterIter[k];
+	}
+	
+    ResultsSaver Results( TypeOfFit );
+    Results.SaveContinousDistribution( "LFdistr.root", Path, PathWithDate, LifetimeGrid, LifetimeGrid_root, Intensities_root, "Results", "Lifetime_distribution_" );
+    
+    vec ModelEstimation =  GradMax.t() * Inten;		//Later will add Background
+	Double_t Values_root[ Values.size() ], Arguments_root[ Values.size() ], Model_root[ Values.size() ];
+	for( unsigned l=0; l<Values.size(); l++ )
+	{
+		Values_root[l] = Values[l];
+		Arguments_root[l] = Arguments[l];
+		Model_root[l] = ModelEstimation(l) + Background;
+	}
+	
+	Results.SaveContinousModelWithDistribution( "Results_from_fit.root", "Continous_fit_", Path, PathWithDate, Values, Arguments_root, Values_root, Model_root, "Raw_Histo_", "Fit_Histo_" );
+    
+    Double_t Residuals_root[ Values.size() ];
+	for( unsigned i = 0; i < Values.size(); i++ )
+	{
+		Residuals_root[i] = (Values_root[i] - Model_root[i])/sqrt( Values_root[i] );
+	}
+	Results.saveResidualsContinous( "Residuals.root", "Continous_fit_", Path, PathWithDate, Values, Arguments_root, Residuals_root );
 }
 
 int Fit::RenormalizeComponentsIntensities()
@@ -634,7 +827,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		double BinWidthOfHisto = histo1->GetBinCenter(2) - histo1->GetBinCenter(1);     //Leaving Underflow bin -> 0
 		if( BinWidth < BinWidthOfHisto )
 		{
-			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::cout;
+			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::endl;
 			std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
 			return;
 		}
@@ -644,7 +837,7 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 			double decimals = std::fmod( RebinNumber, 1 );
 			if( decimals > 0.01 )
 			{
-				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::cout;
+				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::endl;
 				std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
 				return;               
 			}
@@ -739,6 +932,52 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		}
 		data.close();
 	}
+}
+
+double Fit::FindMaxLF()
+{
+	double max = 0.1;
+	for( unsigned i=0; i<LifetimesFromDiscrete.size(); i++ )
+	{
+		if( LifetimesFromDiscrete[i].Parameter > max )
+			max = LifetimesFromDiscrete[i].Parameter;
+	}
+	return max;
+}
+
+double Fit::FindMinLF()
+{
+ 	double min = 10000.;
+	for( unsigned i=0; i<LifetimesFromDiscrete.size(); i++ )
+	{
+		if( LifetimesFromDiscrete[i].Parameter < min )
+			min = LifetimesFromDiscrete[i].Parameter;
+	}
+	return min; 
+}
+
+void Fit::LinearFilter( unsigned FilterRange )
+{
+	double sum = 0.;
+	std::vector<double> tempValues;
+	for( unsigned j=0; j<FilterRange; j++ )
+	{
+		tempValues.push_back( Values[j] );
+	}
+	for( unsigned i=FilterRange; i<Values.size() - FilterRange; i++ )
+	{	
+		sum = 0.;
+		for( unsigned k=0; k<=2*FilterRange + 1; k++ )			//From 0 to 2*FilterRange + 1, because filter should be symmetric around middle bin -> FilterRange points on the left + FilterRange points on the right + middle Point
+		{
+			sum += Values[i - FilterRange + k]/(2*FilterRange + 1);
+		}
+		tempValues.push_back(sum);
+	}
+	for( unsigned l=Values.size()-FilterRange; l<Values.size(); l++ )
+	{
+		tempValues.push_back(Values[l]);
+	}
+	Values = tempValues;
 }
 
 TH1F* FillHistogram( std::string Name, int BinNumber, double Start, double Stop, std::vector<double>& Data )

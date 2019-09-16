@@ -400,10 +400,10 @@ std::vector< std::vector< DiscreteFitResult > > ResultsSaver::saveDiscreteFitRes
 void ResultsSaver::saveResiduals( TH1F* histogram, double MinArgument, double MaxArgument, unsigned MinBin, unsigned MaxBin, TF1* Discrete, std::string FileName, std::string Path, std::string PathWithDate )
 {
 	TCanvas *c2 = new TCanvas( "c2", "", 710, 500 );
-        c2 -> SetFillColor( 0 ); //Option for histogram
-        c2 -> SetFrameBorderMode( 0 );
-        c2 -> SetBorderSize( 2 );
-        c2 -> SetFrameLineWidth( 2 );
+    c2 -> SetFillColor( 0 ); //Option for histogram
+    c2 -> SetFrameBorderMode( 0 );
+    c2 -> SetBorderSize( 2 );
+    c2 -> SetFrameLineWidth( 2 );
 	c2 -> SetLeftMargin(0.12);
 	c2 -> SetRightMargin(0.08);
 	c2 -> SetBorderMode(0);
@@ -430,15 +430,15 @@ void ResultsSaver::saveResiduals( TH1F* histogram, double MinArgument, double Ma
 	TFile *residuals = new TFile( FileName.c_str(), "update" );
 	residuals -> mkdir( Path.c_str() ); 
 	residuals -> cd( Path.c_str() );  
-        TGraph *residualsHisto = new TGraph( MaxBin - MinBin, ResArg_root, Residuals_root );
-        residualsHisto -> SetMarkerStyle( 21 );
-        residualsHisto -> SetMarkerSize( 0.5 );
-        residualsHisto -> SetTitle( "Residuals of the fit" );
-        residualsHisto -> Draw( "APL" );
-        residualsHisto -> GetXaxis() -> SetTitle( "Time difference [ns]" );
-        residualsHisto -> GetXaxis() -> SetTitle( "Residuals" );
-        residualsHisto -> Write( PathWithDate.c_str() );
-        delete residualsHisto;
+    TGraph *residualsHisto = new TGraph( MaxBin - MinBin, ResArg_root, Residuals_root );
+    residualsHisto -> SetMarkerStyle( 21 );
+    residualsHisto -> SetMarkerSize( 0.5 );
+    residualsHisto -> SetTitle( "Residuals of the discrete fit" );
+    residualsHisto -> Draw( "APL" );
+    residualsHisto -> GetXaxis() -> SetTitle( "Time difference [ns]" );
+    residualsHisto -> GetYaxis() -> SetTitle( "Residuals" );
+    residualsHisto -> Write( PathWithDate.c_str() );
+    delete residualsHisto;
 
 	residuals->Close();
 	delete c2;
@@ -464,4 +464,129 @@ void ResultsSaver::saveLFvsIntensities( std::string FileName, std::string Path, 
 	
 	delete LF_vs_In;
 	comparison->Close();  
+}
+
+void ResultsSaver::SaveContinousDistribution( std::string FileName, std::string Path, std::string PathWithDate, std::vector< double > LifetimeGrid, Double_t *LifetimeGrid_root, Double_t *Intensities_root, std::string TXTPath, std::string TXTFileName )
+{
+    TFile *testFile = new TFile( FileName.c_str(), "update" );
+    testFile -> mkdir( Path.c_str() );
+    testFile -> cd( Path.c_str() );
+        
+    TGraph *distr = new TGraph( LifetimeGrid.size(), LifetimeGrid_root, Intensities_root );
+
+    distr -> SetMarkerStyle( 21 );
+    distr -> SetMarkerSize( 0.5 );
+    distr -> SetTitle( "LF distribution" );
+    distr -> Draw( "APL" );
+
+    distr -> GetXaxis() -> SetTitle( "Lifetime [ns]" );
+    distr -> Write( PathWithDate.c_str() );
+    
+    unsigned LastBin = distr -> GetN();
+    Double_t ax[LastBin], ay[LastBin];
+    double Max = 0.0001;
+    for( unsigned i=0; i<LastBin; i++ )
+    {
+        distr -> GetPoint( i, ax[i], ay[i] );
+        if( ay[i] > Max )
+            Max = ay[i];
+    }
+    for( unsigned i=0; i<LastBin; i++ )
+    {
+        distr -> SetPoint( i, ax[i], ay[i]/Max );
+    }
+    distr -> Write( ("NormalizedToMax_"+PathWithDate).c_str() );
+    
+    delete distr;
+	testFile->Close();
+    
+    std::cout<<"-------------Saving resulting distributions option on-------------"<<std::endl;
+    std::ofstream results;
+    results.open( ( TXTPath + "/" + TXTFileName + PathWithDate).c_str() );
+    for( unsigned i = 0; i < LifetimeGrid.size(); i++ )
+    {
+            results << LifetimeGrid_root[i] << "   " << Intensities_root[i] <<std::endl;
+    }
+    results.close();
+}
+
+void ResultsSaver::SaveContinousModelWithDistribution( std::string FileName, std::string Prefix, std::string Path, std::string PathWithDate, std::vector< double > Values, Double_t *Arguments_root, Double_t *Values_root, Double_t *Model_root, std::string HistoName, std::string FitName )
+{
+    TFile *testFile = new TFile( FileName.c_str(), "update" );
+    testFile -> mkdir( (Prefix+Path).c_str() );
+    testFile -> cd( (Prefix+Path).c_str() );
+        
+    TGraph *histo = new TGraph( Values.size(), Arguments_root, Values_root );
+	TGraph *histoFit = new TGraph( Values.size(), Arguments_root, Model_root );
+	
+	TCanvas *c1 = new TCanvas( "c1", "", 710, 500 );
+    c1 -> SetFillColor( 0 ); //Option for histogram
+    c1 -> SetFrameBorderMode( 0 );
+    c1 -> SetBorderSize( 2 );
+    c1 -> SetFrameLineWidth( 2 );
+	c1 -> SetLeftMargin(0.12);
+	c1 -> SetRightMargin(0.08);
+	c1 -> SetBorderMode(0);
+	
+    histo -> SetMarkerStyle( 21 );
+    histo -> SetMarkerSize( 0.5 );
+    histo -> SetTitle( "Histogram from data" );
+    histo -> GetXaxis() -> SetTitle( "Time difference [ns]" );
+    histo -> GetYaxis() -> SetTitle( "Counts" );
+    histo -> Draw( "AP" );
+	
+    histoFit -> SetMarkerStyle( 20 );
+    histoFit -> SetMarkerColor( kRed );
+    histoFit -> SetMarkerSize( 0.2 );
+    histoFit -> SetLineColor( kRed );
+    histoFit -> SetLineWidth( 2 );
+    histoFit -> SetTitle( "Histogram from fit" );
+    histoFit -> GetXaxis() -> SetTitle( "Time difference [ns]" );
+    histoFit -> GetYaxis() -> SetTitle( "Counts" );
+    histoFit -> Draw( "same" );
+
+	c1 -> SetLogy();
+	histo -> Write( (HistoName+PathWithDate).c_str() );
+	histoFit -> Write( (FitName+PathWithDate).c_str() );
+	
+	c1 -> Write( PathWithDate.c_str() );
+	delete c1;
+	delete histo;
+	delete histoFit;	
+	delete testFile;
+}
+
+void ResultsSaver::saveResidualsContinous( std::string FileName, std::string Prefix, std::string Path, std::string PathWithDate, std::vector< double > Values, Double_t *Arguments_root, Double_t *Residuals_root )
+{
+    TCanvas *c2 = new TCanvas( "c2", "", 710, 500 );
+    c2 -> SetFillColor( 0 ); //Option for histogram
+    c2 -> SetFrameBorderMode( 0 );
+    c2 -> SetBorderSize( 2 );
+    c2 -> SetFrameLineWidth( 2 );
+	c2 -> SetLeftMargin(0.12);
+	c2 -> SetRightMargin(0.08);
+	c2 -> SetBorderMode(0);
+
+	gStyle -> SetOptStat(10);
+	gStyle -> SetStatX(0.92);
+	gStyle -> SetStatY(0.92);
+	gStyle -> SetStatW(0.2);
+	gStyle -> SetStatH(0.15);
+	gStyle -> SetStatBorderSize(2);
+    
+    TFile *residuals = new TFile( FileName.c_str(), "update" );
+	residuals -> mkdir( (Prefix+Path).c_str() ); 
+	residuals -> cd( (Prefix+Path).c_str() );  
+    
+    TGraph *residualsHisto = new TGraph( Values.size(), Arguments_root, Residuals_root );
+    residualsHisto -> SetMarkerStyle( 21 );
+    residualsHisto -> SetMarkerSize( 0.5 );
+    residualsHisto -> SetTitle( "Residuals of the continous fit" );
+    residualsHisto -> Draw( "APL" );
+    residualsHisto -> GetXaxis() -> SetTitle( "Time difference [ns]" );
+    residualsHisto -> GetYaxis() -> SetTitle( "Residuals" );
+    residualsHisto -> Write( PathWithDate.c_str() );
+    delete residualsHisto;
+	residuals->Close();
+	delete c2;
 }

@@ -29,15 +29,16 @@
 #include <TF12.h>
 #include <TGraphErrors.h>
 #include "TFile.h"
-//#define  ARMA_DONT_USE_WRAPPER
-//#define  ARMA_USE_LAPACK
-//#include <armadillo>
+#define  ARMA_DONT_USE_WRAPPER
+#define  ARMA_USE_LAPACK
+#include <armadillo>
 #include <time.h>
 
 #include "PALS_avalanche_libTools.h"
 #include "PALS_avalanche_fileTools.h"
 //#include "PALS_avalanche_fitFunctions.h"
 #include "PALS_avalanche_resultsSaver.h"
+#include "PALS_avalanche_deconvolution.h"
 
 #define oPsLFLimit 0.7f
 #define pPsLFLimit 0.2f
@@ -48,12 +49,14 @@ class Fit
 {
 	public:
 		FileTools fileTools;
+        DCV DecoTools;
 		//ResultsSaver Results;
 		std::string TypeOfFit;
         
 		std::string Path;
 		std::string PathWithDate;
 		std::string TypeOfData;
+        int ROOTFileTestValue;
 		std::string ROOTDirectory;
 		std::string ROOTHistogram;
 		std::string NameOfTheFileForEXCEL;
@@ -69,6 +72,7 @@ class Fit
 		double FirstBinCenter;
 		double LastBinCenter;
 		std::string FixGauss;
+        int BackgroundVarLvl;
 		std::vector<LifetimeComponent> Lifetimes;
 		std::vector<LifetimeComponent> LifetimesNotFixed;
 		std::vector<LifetimeComponent> Resolution;
@@ -100,7 +104,7 @@ class Fit
 		double AreaFromDiscrete;
 
 		int DecoOption;
-		/*double Scaler;
+		double Scaler;
 		double FracMinLF;
 		double FracMaxLF;
 		vec LFGrid;
@@ -121,7 +125,7 @@ class Fit
 		double StepForPreIteration;
 		unsigned NumberOfPreIterations;
 		double StepForIteration;
-		unsigned NumberOfIterations;*/
+		unsigned NumberOfIterations;
 
 		Fit();
 		Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::string FitType );
@@ -131,10 +135,8 @@ class Fit
 		void LinearFilter( unsigned FilterRange );
 		void RangeBackgroundData();
 		int Discrete();
-		/*void Deconvolution();
-		double FindingOptimalAreaParameter( std::vector< double > Sig );
-		double PreIterate( std::vector< double > Sig, double Step, double Lambda, double PreviousChi );
-		double Iterate( vec Intensities, double Step, double Lambda, double PreviousChi );*/
+		void Deconvolution();
+        
 };
 
 TH1F* FillHistogram( std::string Name, int BinNumber, double Start, double Stop, std::vector<double>& Data );

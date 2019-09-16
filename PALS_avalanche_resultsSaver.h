@@ -52,5 +52,8 @@ class ResultsSaver
                                                             double MinArgument, double MaxArgument, double oPsLifetimeCutoff, double pPsLifetimeCutoff, std::string PathForExcel, std::string TypeOfFit );
 		void saveResiduals( TH1F* histogram, double MinArgument, double MaxArgument, unsigned MinBin, unsigned MaxBin, TF1* Discrete, std::string FileName, std::string Path, std::string PathWithDate );
 		void saveLFvsIntensities( std::string FileName, std::string Path, std::string PathWithDate, std::vector< DiscreteFitResult > LifetimesFromDiscrete, std::vector< DiscreteFitResult > IntensitiesFromDiscrete );
+        void SaveContinousDistribution( std::string FileName, std::string Path, std::string PathWithDate, std::vector< double > LifetimeGrid, Double_t *LifetimeGrid_root, Double_t *Intensities_root, std::string TXTPath, std::string TXTFileName );
+        void SaveContinousModelWithDistribution( std::string FileName, std::string Prefix, std::string Path, std::string PathWithDate, std::vector< double > Values, Double_t *Arguments_root, Double_t *Values_root, Double_t *Model_root, std::string HistoName, std::string FitName );
+        void saveResidualsContinous( std::string FileName, std::string Prefix, std::string Path, std::string PathWithDate, std::vector< double > Values, Double_t *Arguments_root, Double_t *Residuals_root );
 };
 #endif
