@@ -359,7 +359,7 @@ int Fit::Discrete()
 		if( Lifetimes[i].Type == "ps" )
 			pPsIndex = i;
 	}
-	std::cout << pPsIndex << " tah " << std::endl;
+	std::cout << "pPsindex test: " << pPsIndex <<  std::endl;
 	
 	FitFunction fitTools( TypeOfFit, pPsIndex + 1, Resolution.size(), Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
 	
@@ -371,7 +371,7 @@ int Fit::Discrete()
 	fitTools.generateParameter( 3, area, "Total area of components", 0., 0., "NoLimits" );
 	fitTools.generateResolutionParameter( 4, Resolution, FixGauss, Arguments[ BinMax ] );
 	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
-	
+    
 	fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
     TF1 *Discrete = fitTools.getFitFunction();
 	
@@ -430,7 +430,7 @@ int Fit::Discrete()
 	}
 	
 	ResultsSaver Results( TypeOfFit );
-	
+    
 	Results.saveDiscreteFit( histogram, Discrete, "Results_from_fit.root", Path, "Results", PathWithDate );
 
 	//AreaFromDiscrete = Discrete -> GetParameter( 3 );	If neede in future can be uncommented !?|?!
@@ -505,6 +505,41 @@ int Fit::Discrete()
 								FixedIterator, pPsIndex, pPsIntensity, FreeParameters, FreeParametersErrors, 
 								FixedIntensities, FreeIntensitiesTopPs, FixedFixedIntensity, FreeIntensities, Lifetimes, 
 								Arguments[ Range_From ], Arguments[ Range_To ], oPsLFLimit, pPsLFLimit, NameOfTheFileForEXCEL, TypeOfFit);
+
+	FitFunction fitToolsComp( "comp", pPsIndex + 1, Resolution.size(), Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
+    TF1 *DiscreteComp = fitToolsComp.getFitFunction(); 
+    for( unsigned i=0; i<4 + Lifetimes.size()*2 + 3*Resolution.size() + 1; i++ )
+    {
+        DiscreteComp -> SetParameter( i, Discrete -> GetParameter(i) );
+    }
+    std::vector<TF1*> DiscreteCompVector;
+    for( unsigned i=0; i<Lifetimes.size(); i++ )
+    {
+        TF1 *DiscreteCompTemp = new TF1();     
+        DiscreteComp -> Copy(*DiscreteCompTemp);
+        DiscreteCompTemp -> SetParameter( 0, 0 );
+        for( unsigned j=0; j<Lifetimes.size(); j++ )
+        {
+            DiscreteCompTemp -> SetParameter( 4 + 3*Resolution.size() + 2*j, ResultsDiscrete[0][j].Parameter );
+            DiscreteCompTemp -> SetParameter( 5 + 3*Resolution.size() + 2*j, ResultsDiscrete[1][j].Parameter );
+            if( i!=j )
+            {
+                DiscreteCompTemp -> SetParameter( 5 + 3*Resolution.size() + 2*j, 0 ); 
+            }
+        }
+        DiscreteCompVector.push_back( DiscreteCompTemp );
+    }
+    TF1 *BackgroundTemp = new TF1();
+    DiscreteComp -> Copy(*BackgroundTemp);
+    for( unsigned j=0; j<Lifetimes.size(); j++ )
+    {
+        BackgroundTemp -> SetParameter( 4 + 3*Resolution.size() + 2*j, ResultsDiscrete[0][j].Parameter );
+        BackgroundTemp -> SetParameter( 5 + 3*Resolution.size() + 2*j, 0 );
+    }
+    DiscreteCompVector.push_back( BackgroundTemp );
+    
+    Results.saveDiscreteFitWithComponents( histogram, Discrete, DiscreteCompVector, ResultsDiscrete, "Results_from_fit.root", Path, "Results", PathWithDate );   
+    
 	Results.saveResiduals( histogram, Arguments[ Range_From ], Arguments[ Range_To ], Range_From, Range_To, Discrete, "Residuals.root", Path, PathWithDate );
 	Results.saveLFvsIntensities( "LF_vs_In.root", Path, PathWithDate, ResultsDiscrete[0], ResultsDiscrete[1] );
 	
@@ -652,17 +687,20 @@ void Fit::GetHistogramToVector( std::string path, int ROOTFileTest )
 		TH1D* histo1 = (TH1D*) dir->Get( ROOTHistogram.c_str() );
 		
 		double BinWidthOfHisto = histo1->GetBinCenter(2) - histo1->GetBinCenter(1);     //Leaving Underflow bin -> 0
-		if( BinWidth < BinWidthOfHisto )
+		if( BinWidth < 0.99*BinWidthOfHisto )
 		{
 			std::cout << "Cannot get smaller bins from the big once. Rebinning impossible, bad BinWidth in FitDetails or no histogram readed" << std::endl;
 			std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;
+            std::cout << "Difference " << BinWidthOfHisto - BinWidth << std::endl;
 			return;
 		}
 		else
 		{
 			double RebinNumber = BinWidth/BinWidthOfHisto;
 			double decimals = std::fmod( RebinNumber, 1 );
-			if( decimals > 0.01 )
+            std::cout << "Rebin by " << RebinNumber << " and the decimals " << decimals << " " << fabs( decimals - 1 ) << std::endl;
+            std::cout << "Test Decimal of the division of Bin from FitDetails by Bin of the histogram - " << std::fmod( BinWidth, BinWidthOfHisto ) << std::endl;
+			if( decimals > 0.01 && decimals < 0.99 )
 			{
 				std::cout << "BinWidth given by the user in FitDetails is not the multiplicity of BinWidth of the histogram in ROOT file" << std::endl;
 				std::cout << "Bin from FitDetails " << BinWidth << " and the Bin of the histogram " << BinWidthOfHisto << std::endl;

@@ -26,7 +26,7 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 	gStyle->SetOptFit(0000);			//Option for fitting parameters showed in statisticbox
     
 	histogram -> Draw("");
-	DiscreteFit -> Draw("C same");
+	DiscreteFit -> Draw("same");
 	
 	TFile *resultsFile = new TFile( RootFile, "update" );
 	resultsFile -> mkdir( PathOfFile.c_str() );
@@ -43,7 +43,104 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 	c1->SetLogy();
 	c1->SaveAs( ( ResultsPath + "/" + PathOfFileWithDate + "_logscale"+".png" ).c_str() );
 	c1 -> Write( PathOfFileWithDate.c_str() );
+    
+	delete resultsFile;
+	delete c1;
+}
+
+void ResultsSaver::saveDiscreteFitWithComponents( TH1F *histogram, TF1 *DiscreteFit, std::vector<TF1*> DiscreteFitComp, std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete, const char *RootFile, std::string PathOfFile, std::string ResultsPath, std::string PathOfFileWithDate )
+{
+	TCanvas *c1 = new TCanvas( "c1", "", 710, 500 );
+
+	c1 -> SetFillColor( 0 ); //Option for histogram
+	c1 -> SetFrameBorderMode( 0 );
+	c1 -> SetBorderSize( 2 );
+	c1 -> SetFrameLineWidth( 2 );
+	c1 -> SetLeftMargin(0.12);
+	c1 -> SetRightMargin(0.08);
+	c1 -> SetBorderMode(0);
+
+	gStyle -> SetOptStat(10);
+	gStyle -> SetStatX(0.92);
+	gStyle -> SetStatY(0.92);
+	gStyle -> SetStatW(0.2);
+	gStyle -> SetStatH(0.15);
+	gStyle -> SetStatBorderSize(2);
+	gStyle->SetOptFit(0000);			//Option for fitting parameters showed in statisticbox
+    
+	histogram -> Draw("");
+	DiscreteFit -> Draw("same");
 	
+	TFile *resultsFile = new TFile( RootFile, "update" );
+	resultsFile -> mkdir( PathOfFile.c_str() );
+	resultsFile -> cd( PathOfFile.c_str() );
+		    
+	if( not fileTools.PathCheck( ResultsPath ) )
+	{
+		std::cout << "Creating directory for results" << std::endl;
+		boost::filesystem::path dir( ResultsPath );
+		boost::filesystem::create_directories( dir );
+	}
+	
+    TLegend* legend = new TLegend(0.6,0.6,0.95,0.95);
+    legend->AddEntry( histogram, "Histogram from the data","l" );
+    legend->AddEntry( DiscreteFit, "Fitted function", "l" );
+	
+    std::cout << DiscreteFit->Eval( 6 ) << " ";
+    double Value6 = 0, Value7 = 0, Value8 = 0, Value9 = 0, Value10 = 0;
+    for( unsigned i=0; i<DiscreteFitComp.size(); i++ )
+    {
+        switch(i)
+        {
+            case 0:
+                DiscreteFitComp[i] -> SetLineColor( kYellow + 2 );
+                break;
+            case 1:
+                DiscreteFitComp[i] -> SetLineColor( kGreen + 2 );
+                break;
+            case 2:
+                DiscreteFitComp[i] -> SetLineColor( kCyan + 2 );
+                break;
+            case 3:
+                DiscreteFitComp[i] -> SetLineColor( kBlue + 2 );
+                break;
+            case 4:
+                DiscreteFitComp[i] -> SetLineColor( kMagenta + 2 );
+                break;
+            case 5:
+                DiscreteFitComp[i] -> SetLineColor( kGray + 2 );
+                break;
+            case 6:
+                DiscreteFitComp[i] -> SetLineColor( kOrange -5 );
+                break;
+            case 7:
+                DiscreteFitComp[i] -> SetLineColor( kSpring - 9 );
+                break;
+            case 8:
+                DiscreteFitComp[i] -> SetLineColor( kPink - 9 );
+                break;
+        }
+        if( i<DiscreteFitComp.size() - 1 )
+            legend->AddEntry( DiscreteFitComp[i], ( "Component with lifetime " + fileTools.NumberToChar( ResultsDiscrete[0][i].Parameter, 3 ) ).c_str(), "l" );
+        else
+            legend->AddEntry( DiscreteFitComp[i], "Background", "l" );
+        DiscreteFitComp[i] -> Draw("same");
+        std::cout << DiscreteFitComp[i]->Eval( 6 ) << " ";
+        Value6 += DiscreteFitComp[i]->Eval( 6 );
+        Value7 += DiscreteFitComp[i]->Eval( 7 );
+        Value8 += DiscreteFitComp[i]->Eval( 8 );
+        Value9 += DiscreteFitComp[i]->Eval( 9 );
+        Value10 += DiscreteFitComp[i]->Eval( 10 );
+    }
+    std::cout << std::endl;
+    legend->Draw("same");
+    std::cout << DiscreteFit->Eval( 6 ) << " " << Value6 << " " << DiscreteFit->Eval( 6 ) / Value6 << std::endl;
+    std::cout << DiscreteFit->Eval( 7 ) << " " << Value7 << " " << DiscreteFit->Eval( 7 ) / Value7 << std::endl;
+    std::cout << DiscreteFit->Eval( 8 ) << " " << Value8 << " " << DiscreteFit->Eval( 8 ) / Value8 << std::endl;
+    std::cout << DiscreteFit->Eval( 9 ) << " " << Value9 << " " << DiscreteFit->Eval( 9 ) / Value9 << std::endl;
+    std::cout << DiscreteFit->Eval( 10 ) << " " << Value10 << " " << DiscreteFit->Eval( 10 ) / Value10 << std::endl;
+	c1 -> Write( (PathOfFileWithDate + "WithComponents").c_str() );
+    
 	delete resultsFile;
 	delete c1;
 }
@@ -430,15 +527,15 @@ void ResultsSaver::saveResiduals( TH1F* histogram, double MinArgument, double Ma
 	TFile *residuals = new TFile( FileName.c_str(), "update" );
 	residuals -> mkdir( Path.c_str() ); 
 	residuals -> cd( Path.c_str() );  
-        TGraph *residualsHisto = new TGraph( MaxBin - MinBin, ResArg_root, Residuals_root );
-        residualsHisto -> SetMarkerStyle( 21 );
-        residualsHisto -> SetMarkerSize( 0.5 );
-        residualsHisto -> SetTitle( "Residuals of the fit" );
-        residualsHisto -> Draw( "APL" );
-        residualsHisto -> GetXaxis() -> SetTitle( "Time difference [ns]" );
-        residualsHisto -> GetXaxis() -> SetTitle( "Residuals" );
-        residualsHisto -> Write( PathWithDate.c_str() );
-        delete residualsHisto;
+    TGraph *residualsHisto = new TGraph( MaxBin - MinBin, ResArg_root, Residuals_root );
+    residualsHisto -> SetMarkerStyle( 21 );
+    residualsHisto -> SetMarkerSize( 0.5 );
+    residualsHisto -> SetTitle( "Residuals of the fit" );
+    residualsHisto -> Draw( "APL" );
+    residualsHisto -> GetXaxis() -> SetTitle( "Time difference [ns]" );
+    residualsHisto -> GetXaxis() -> SetTitle( "Residuals" );
+    residualsHisto -> Write( PathWithDate.c_str() );
+    delete residualsHisto;
 
 	residuals->Close();
 	delete c2;

@@ -4,7 +4,7 @@ FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResol
 {
 	if( Approach == "" )
 	{
-		if( pPsOption == 0 ) // pPs option equal to zero means that there is pPs
+		if( pPsOption == 0 ) // pPs option equal to zero means that there is no pPs
 		{
 			//SelectedFunction = & FitFunction::DiscreteFitFunctionNoPs;
 			Discrete = new TF1( "Discrete", DiscreteFitFunctionNoPs, HistoStart, HistoEnd, NumberOfParameters );
@@ -70,9 +70,9 @@ FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResol
 			}
 		}
 	}
-	else
+	else if( Approach == "old" )
 	{
-		if( pPsOption >= 0 ) // pPs option equal t zero means that there is pPs
+		if( pPsOption == 0 ) // pPs option equal t zero means that there is no pPs
 		{
 			//SelectedFunction = & FitFunction::DiscreteFitFunctionNoPs_old;
 			Discrete = new TF1( "Discrete", DiscreteFitFunctionNoPs_old, HistoStart, HistoEnd, NumberOfParameters );
@@ -85,6 +85,11 @@ FitFunction::FitFunction( std::string Approach, int pPsOption, int NumberOfResol
 			Discrete -> SetNpx( NumberOfPointsForDrawing );
 		}        
 	}
+	else
+    {
+			Discrete = new TF1( "Discrete", DiscreteFitFunctionNoPsSeparateComp, HistoStart, HistoEnd, NumberOfParameters );
+			Discrete -> SetNpx( NumberOfPointsForDrawing );
+    }
 }
 
 void FitFunction::generateParameter( unsigned NumberOfParameter, double InitValue, const char * NameOfParamter, double LowerLimit, double HigherLimit, std::string FixingOption )
@@ -248,6 +253,19 @@ void FitFunction::Fit( TH1F* histogram )
 	histogram -> Fit(Discrete,"RMW");
 }
 
+Double_t DiscreteFitFunctionNoPsSeparateComp( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
+{
+	Double_t sum = 0., FixedIntensity = 0.;
+	for( unsigned i = 0; i < P[1]; i++ )
+	{
+		for( unsigned j = 0; j < P[2]; j++ )
+		{
+			sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ );
+		}
+	}
+	return sum + P[0];
+}
+
 Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0.;
@@ -274,8 +292,8 @@ Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P )	//First parameter -
 
 Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
-	Double_t sum = 0., FixedIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]]; j < P[2]; j++ )
+	Double_t sum = 0., FixedIntensity = 0., FreeIntensity = 0.;
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 	{	  
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -300,7 +318,7 @@ Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P )	//First paramet
 Double_t DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]]; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 	{	  
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -321,7 +339,7 @@ Double_t DiscreteFitFunctionNoPs_exp_1( Double_t *A, Double_t *P )	//First param
 Double_t DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]]; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 	{	  
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -362,7 +380,7 @@ Double_t DiscreteFitFunctionNoPs_exp_2( Double_t *A, Double_t *P )	//First param
 Double_t DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]]; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]; j < P[2]; j++ )
 	{	  
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -414,16 +432,16 @@ Double_t DiscreteFitFunctionNoPs_exp_3( Double_t *A, Double_t *P )	//First param
 Double_t DiscreteFitFunctionPs( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]] + 4; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			FreepPsIntensity += P[5 + 3*(int)P[1]]*GetIntensityParameterNew( P, 2, 5 + 3*(int)P[1] + 2*P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 2, (j-P[6 + 3*(int)P[1] + 2*((int)P[2]-1)]) );
 	}
 	for( unsigned i = 0; i < P[1]; i++ )
 	{
 		for( unsigned j = 1; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j++ )
 		{
-			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+			if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			{
 				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
 												      ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
@@ -452,10 +470,10 @@ Double_t DiscreteFitFunctionPs( Double_t *A, Double_t *P )	//First parameter - n
 
 Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
-	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]] + 4; j < P[2]; j++ )
+	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0., FreeIntensity = 0.;
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			FreepPsIntensity += P[5 + 3*(int)P[1]]*P[5 + 3*(int)P[1] + 2*j];
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -464,7 +482,7 @@ Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P )	//First parameter
 		//std::cin >> FreeIntensity;
 		for( unsigned j = 1; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j++ )
 		{
-			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+			if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			{
 				sum += P[3]/* Area */ * GetIntensityParameterNew( P, 1, 5, i+1 )/* Intensity */ *(ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
 												      ExMoGa( A[0], P[4 + 3*i]/* Sigma */, P[6 + 3*i]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
@@ -494,15 +512,15 @@ Double_t DiscreteFitFunctionPs_old( Double_t *A, Double_t *P )	//First parameter
 Double_t DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]] + 4; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			FreepPsIntensity += P[5 + 3*(int)P[1]]*P[5 + 3*(int)P[1] + 2*j];
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
 	for( unsigned j = 1; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 		{
 			sum += P[3]/* Area */ * 1/* Intensity */ *(ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1] + 2*j]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]/* Intensity */ ) + 
 							  ExMoGa( A[0], P[4]/* Sigma */, P[6]/* Offset */, P[4 + 3*(int)P[1]]/* Lifetime */, P[5 + 3*(int)P[1] + 2*j]*P[5 + 3*(int)P[1]]/* Intensity */ ));
@@ -527,9 +545,9 @@ Double_t DiscreteFitFunctionPs_exp_1( Double_t *A, Double_t *P )	//First paramet
 Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]] + 4; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			FreepPsIntensity += P[5 + 3*(int)P[1]]*P[5 + 3*(int)P[1] + 2*j];
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -537,7 +555,7 @@ Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P )	//First paramet
 	{
 		for( unsigned j = 1; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j++ )
 		{
-			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+			if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			{
 				if( i )
 				{
@@ -601,9 +619,9 @@ Double_t DiscreteFitFunctionPs_exp_2( Double_t *A, Double_t *P )	//First paramet
 Double_t DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P )	//First parameter - nmbr of comp, Second - nmb of Gauss
 {
 	Double_t sum = 0., FixedIntensity = 0., FreepPsIntensity = 0., FreeIntensity = 0.;	
-	for( unsigned j = P[6 + 3*(int)P[1] + 2*(int)P[2]] + 4; j < P[2]; j++ )
+	for( unsigned j = P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j < P[2]; j++ )
 	{
-		if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+		if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			FreepPsIntensity += P[5 + 3*(int)P[1]]*P[5 + 3*(int)P[1] + 2*j];
 		FreeIntensity += P[5 + 3*(int)P[1] + 2*j];
 	}
@@ -611,7 +629,7 @@ Double_t DiscreteFitFunctionPs_exp_3( Double_t *A, Double_t *P )	//First paramet
 	{
 		for( unsigned j = 1; j < P[6 + 3*(int)P[1] + 2*((int)P[2]-1)] + 1; j++ )
 		{
-			if( P[4 + 3*(int)P[1] + 2*j] > 0.7 )
+			if( P[4 + 3*(int)P[1] + 2*j] > oPsLFLimit )
 			{
 				if( i == 1 )
 				{
