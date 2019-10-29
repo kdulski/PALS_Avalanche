@@ -45,6 +45,7 @@ class ResultsSaver
 		FileTools fileTools;
 		//FitFunction fitFunction;
 		void saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const char *RootFile, std::string PathOfFile, std::string ResultsPath, std::string PathOfFileWithDate );
+        void saveDiscreteFitWithComponents( TH1F *histogram, TF1 *DiscreteFit, std::vector<TF1*> DiscreteFitComp, std::vector< std::vector< DiscreteFitResult > > ResultsDiscrete, const char *RootFile, std::string PathOfFile, std::string ResultsPath, std::string PathOfFileWithDate );
 		std::vector< std::vector< DiscreteFitResult > > saveDiscreteFitResultsToTXTandExcel( std::string Path, std::string Prefix, std::string PathWithDate, 
                                                             TF1* Discrete, TH1F* histogram, double Background, double SDBackground, Double_t* ResolutionsFromFit, Double_t* ResolutionsFromFitErrors, 
                                                             unsigned FixedIterator, int pPsIndex, double pPsIntensity, Double_t* FreeParameters, Double_t* FreeParametersErrors, 

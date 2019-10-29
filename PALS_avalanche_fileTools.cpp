@@ -124,7 +124,7 @@ std::vector<std::string> FileTools::GetFitDetails()
 			test000 = 0;
 	}
 	optionTemp.erase( optionTemp.end()-1, optionTemp.end() );
-	std::cout << optionTemp << std::endl;
+	std::cout << "Histogram name provided: " << optionTemp << std::endl;
 	FitDetailsData.push_back( optionTemp );
  	for( unsigned i=0; i<1; i++ ) //Leaving header
 	{

@@ -52,6 +52,7 @@ class FitFunction
 		void generateInitLifetimeParameterBRR( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed, TF1* DiscreteFunction );
 		void generateIterLifetimeParameterBRR( unsigned NumberOfFirstParameter, std::string TypeOfFit, std::vector<LifetimeComponent> Lifetimes, std::vector<LifetimeComponent> LifetimesNotFixed, /*TF1 *DiscreteFitted, */unsigned Iteration, double VarLvl, TF1* DiscreteFunction  );
 };
+Double_t DiscreteFitFunctionNoPsSeparateComp( Double_t *A, Double_t *P );
 
 Double_t DiscreteFitFunctionNoPs( Double_t *A, Double_t *P );
 Double_t DiscreteFitFunctionNoPs_old( Double_t *A, Double_t *P );
