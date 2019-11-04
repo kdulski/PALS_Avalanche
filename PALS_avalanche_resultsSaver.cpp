@@ -139,8 +139,10 @@ void ResultsSaver::saveDiscreteFitWithComponents( TH1F *histogram, TF1 *Discrete
     std::cout << DiscreteFit->Eval( 8 ) << " " << Value8 << " " << DiscreteFit->Eval( 8 ) / Value8 << std::endl;
     std::cout << DiscreteFit->Eval( 9 ) << " " << Value9 << " " << DiscreteFit->Eval( 9 ) / Value9 << std::endl;
     std::cout << DiscreteFit->Eval( 10 ) << " " << Value10 << " " << DiscreteFit->Eval( 10 ) / Value10 << std::endl;
-	c1 -> Write( (PathOfFileWithDate + "WithComponents").c_str() );
-    
+	c1->SetLogy();
+	c1->Write( (PathOfFileWithDate + "_WithComponents").c_str() );
+	c1->SaveAs( ( ResultsPath + "/" + PathOfFileWithDate + "_logscale_withComponents"+".png" ).c_str() );    
+
 	delete resultsFile;
 	delete c1;
 }

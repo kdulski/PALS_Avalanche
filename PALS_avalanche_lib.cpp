@@ -295,7 +295,7 @@ void Fit::RangeBackgroundData()
 		Path.erase( Path.begin(), Path.begin() + slashPlace + 1);
 	}
 	if( ROOTFileTestValue )
-        PathWithDate = Path + ROOTHistogram + "_Date:" + GetTime();
+        PathWithDate = Path + "_" + ROOTHistogram + "_Date:" + GetTime();
     else
         PathWithDate = Path + "_Date:" + GetTime();
 	if( NameOfTheFileForEXCEL == "no" )
