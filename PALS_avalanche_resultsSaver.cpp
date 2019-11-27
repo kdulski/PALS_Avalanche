@@ -108,7 +108,6 @@ void ResultsSaver::saveDiscreteFitWithComponents( TH1F *histogram, TF1 *Discrete
         }
 	Order.push_back(DiscreteFitComp.size()-1);
 
-    double Value6 = 0, Value7 = 0, Value8 = 0, Value9 = 0, Value10 = 0;
     for( unsigned i=0; i<DiscreteFitComp.size(); i++ )
     {
         switch(Order[i])
