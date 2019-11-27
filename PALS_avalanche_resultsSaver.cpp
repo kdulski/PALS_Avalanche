@@ -24,7 +24,7 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 	gStyle -> SetStatH(0.15);
 	gStyle -> SetStatBorderSize(2);
 	gStyle->SetOptFit(0000);			//Option for fitting parameters showed in statisticbox
-    
+    	histogram -> GetXaxis() -> SetRangeUser(1,40);
 	histogram -> Draw("");
 	DiscreteFit -> Draw("same");
 	
@@ -38,7 +38,6 @@ void ResultsSaver::saveDiscreteFit( TH1F *histogram, TF1 *DiscreteFit, const cha
 		boost::filesystem::path dir( ResultsPath );
 		boost::filesystem::create_directories( dir );
 	}
-	
 	c1->SaveAs( ( ResultsPath + "/" + PathOfFileWithDate + ".png" ).c_str() );
 	c1->SetLogy();
 	c1->SaveAs( ( ResultsPath + "/" + PathOfFileWithDate + "_logscale"+".png" ).c_str() );
@@ -67,7 +66,7 @@ void ResultsSaver::saveDiscreteFitWithComponents( TH1F *histogram, TF1 *Discrete
 	gStyle -> SetStatH(0.15);
 	gStyle -> SetStatBorderSize(2);
 	gStyle->SetOptFit(0000);			//Option for fitting parameters showed in statisticbox
-    
+        histogram -> GetXaxis() -> SetRangeUser(1,40);
 	histogram -> Draw("");
 	DiscreteFit -> Draw("same");
 	
@@ -85,62 +84,74 @@ void ResultsSaver::saveDiscreteFitWithComponents( TH1F *histogram, TF1 *Discrete
     TLegend* legend = new TLegend(0.6,0.6,0.95,0.95);
     legend->AddEntry( histogram, "Histogram from the data","l" );
     legend->AddEntry( DiscreteFit, "Fitted function", "l" );
-	
-    std::cout << DiscreteFit->Eval( 6 ) << " ";
+
+	std::vector<unsigned> Order;
+	double minTemp = 200, minPrevious = 0;
+        double minTempOld = minTemp;
+        unsigned minTempIndex;
+        bool minSearch = true;
+        while( minSearch )
+        {
+                for( unsigned i=0; i<ResultsDiscrete[0].size(); i++ )
+                {
+                        if( ResultsDiscrete[0][i].Parameter < minTemp && ResultsDiscrete[0][i].Parameter > minPrevious )
+                        {
+                                minTemp = ResultsDiscrete[0][i].Parameter;
+                                minTempIndex = i;
+                        }
+                }
+                Order.push_back( minTempIndex );
+                minPrevious = minTemp;
+                minTemp = minTempOld;
+                if( Order.size() == ResultsDiscrete[0].size() )
+                        minSearch = false;
+        }
+	Order.push_back(DiscreteFitComp.size()-1);
+
     double Value6 = 0, Value7 = 0, Value8 = 0, Value9 = 0, Value10 = 0;
     for( unsigned i=0; i<DiscreteFitComp.size(); i++ )
     {
-        switch(i)
+        switch(Order[i])
         {
             case 0:
-                DiscreteFitComp[i] -> SetLineColor( kYellow + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kYellow + 2 );
                 break;
             case 1:
-                DiscreteFitComp[i] -> SetLineColor( kGreen + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kGreen + 2 );
                 break;
             case 2:
-                DiscreteFitComp[i] -> SetLineColor( kCyan + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kCyan + 2 );
                 break;
             case 3:
-                DiscreteFitComp[i] -> SetLineColor( kBlue + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kBlue + 2 );
                 break;
             case 4:
-                DiscreteFitComp[i] -> SetLineColor( kMagenta + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kMagenta + 2 );
                 break;
             case 5:
-                DiscreteFitComp[i] -> SetLineColor( kGray + 2 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kGray + 2 );
                 break;
             case 6:
-                DiscreteFitComp[i] -> SetLineColor( kOrange -5 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kOrange -5 );
                 break;
             case 7:
-                DiscreteFitComp[i] -> SetLineColor( kSpring - 9 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kSpring - 9 );
                 break;
             case 8:
-                DiscreteFitComp[i] -> SetLineColor( kPink - 9 );
+                DiscreteFitComp[Order[i]] -> SetLineColor( kPink - 9 );
                 break;
         }
         if( i<DiscreteFitComp.size() - 1 )
-            legend->AddEntry( DiscreteFitComp[i], ( "Component with lifetime " + fileTools.NumberToChar( ResultsDiscrete[0][i].Parameter, 3 ) ).c_str(), "l" );
+            legend->AddEntry( DiscreteFitComp[Order[i]], ( "Component with lifetime " + fileTools.NumberToChar( ResultsDiscrete[0][Order[i]].Parameter, 3 ) ).c_str(), "l" );
         else
             legend->AddEntry( DiscreteFitComp[i], "Background", "l" );
         DiscreteFitComp[i] -> Draw("same");
-        std::cout << DiscreteFitComp[i]->Eval( 6 ) << " ";
-        Value6 += DiscreteFitComp[i]->Eval( 6 );
-        Value7 += DiscreteFitComp[i]->Eval( 7 );
-        Value8 += DiscreteFitComp[i]->Eval( 8 );
-        Value9 += DiscreteFitComp[i]->Eval( 9 );
-        Value10 += DiscreteFitComp[i]->Eval( 10 );
     }
     std::cout << std::endl;
     legend->Draw("same");
-    std::cout << DiscreteFit->Eval( 6 ) << " " << Value6 << " " << DiscreteFit->Eval( 6 ) / Value6 << std::endl;
-    std::cout << DiscreteFit->Eval( 7 ) << " " << Value7 << " " << DiscreteFit->Eval( 7 ) / Value7 << std::endl;
-    std::cout << DiscreteFit->Eval( 8 ) << " " << Value8 << " " << DiscreteFit->Eval( 8 ) / Value8 << std::endl;
-    std::cout << DiscreteFit->Eval( 9 ) << " " << Value9 << " " << DiscreteFit->Eval( 9 ) / Value9 << std::endl;
-    std::cout << DiscreteFit->Eval( 10 ) << " " << Value10 << " " << DiscreteFit->Eval( 10 ) / Value10 << std::endl;
+
 	c1->SetLogy();
-	c1->Write( (PathOfFileWithDate + "_WithComponents").c_str() );
+ 	c1->Write( (PathOfFileWithDate + "_WithComponents").c_str() );
 	c1->SaveAs( ( ResultsPath + "/" + PathOfFileWithDate + "_logscale_withComponents"+".png" ).c_str() );    
 
 	delete resultsFile;
