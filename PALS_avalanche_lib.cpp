@@ -126,8 +126,8 @@ Fit::Fit( std::string path, std::string pathForDetails, int ROOTFileTest, std::s
 	lineNumber++;
 	FixGauss = DataAsString[lineNumber];
 	lineNumber++;
-    BackgroundVarLvl = stod( DataAsString[lineNumber] );
-    lineNumber++;
+    	BackgroundVarLvl = stod( DataAsString[lineNumber] );
+    	lineNumber++;
     
 	std::vector<int> ComponentsMultiplicites = fileTools.GetComponentsMultiplicities( DataAsString[1] );
 	int ComponentsShift = ComponentsMultiplicites[0] + ComponentsMultiplicites[1];
@@ -365,7 +365,7 @@ int Fit::Discrete()
 	
 	//fitTools.generateFitFunction( Arguments[ Range_From ], Arguments[ Range_To ], 4 + Lifetimes.size()*2 + 3*Resolution.size() + 1, (Range_To - Range_From)/BinWidth );
 	
-	fitTools.generateParameter( 0, Background, "Background", Background - 3*SDBackground, Background + 3*SDBackground, "NoFixing" );
+	fitTools.generateParameter( 0, Background, "Background", Background - BackgroundVarLvl*SDBackground, Background + BackgroundVarLvl*SDBackground, "NoFixing" );
 	fitTools.generateParameter( 1, Resolution.size(), "Number of Gauss resolution components", 0., 10., "Fix" );
 	fitTools.generateParameter( 2, Lifetimes.size(), "Number of Lifetimes components", 0., 10., "Fix" );
 	fitTools.generateParameter( 3, area, "Total area of components", 0., 0., "NoLimits" );
@@ -373,7 +373,7 @@ int Fit::Discrete()
 	fitTools.generateInitLifetimeParameter( 4 + 3*Resolution.size(), TypeOfFit, Lifetimes, LifetimesNotFixed );
     
 	fitTools.Fit( histogram );		// This Fit is with weight of non-zero bin to 1, if no W option then ROOT is showing its incompetency
-    TF1 *Discrete = fitTools.getFitFunction();
+    	TF1 *Discrete = fitTools.getFitFunction();
 	
 	for( unsigned iteration = 0; iteration < NmbrOfIterations; iteration++ )
 	{
