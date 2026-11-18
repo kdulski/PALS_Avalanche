@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpals_root.a CMakeFiles/pals_root.dir/src/FitSession.cpp.o CMakeFiles/pals_root.dir/src/Fitter.cpp.o CMakeFiles/pals_root.dir/src/RootFormula.cpp.o CMakeFiles/pals_root.dir/src/RootIO.cpp.o
+/usr/bin/ranlib libpals_root.a

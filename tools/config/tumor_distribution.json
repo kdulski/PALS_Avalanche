@@ -1,0 +1,62 @@
+{
+  "description": "tumor.json with a log-normal width of the o-Ps component (sd of ln tau, fitted, profile-likelihood interval) and the distribution analysis (NNLS bagged + MaxEnt). Note: the ColonCancer spectrum (~7e5 counts) is below the statistics where widths and distributions are reliable (~5e6 - 1e7); the report says so.",
+  "input": {
+    "format": "times",
+    "column": 0
+  },
+  "histogram": {
+    "bin_width": 0.02,
+    "range": [0, 120]
+  },
+  "estimation": {
+    "min_counts_first_bin": 8,
+    "min_counts_last_bin": 8,
+    "background": {
+      "side": "right",
+      "bins": 100,
+      "skip_bins": 30,
+      "n_sigma": 3
+    },
+    "fit_start_fraction": 0.3,
+    "fit_end": 40
+  },
+  "resolution": [
+    {
+      "sigma": 0.1,
+      "intensity": 1.0
+    }
+  ],
+  "lifetimes": [
+    {"tau": 0.125, "intensity": 0.3, "type": "nf"},
+    {"tau": 0.374, "intensity": 0.1, "type": "f"},
+    {"tau": 0.3, "intensity": 0.5, "type": "nf"},
+    {"tau": 2.0, "intensity": 0.1, "type": "nf", "width": 0.05, "width_mode": "free"}
+  ],
+  "fit": {
+    "iterations": 3,
+    "partial_variation_percent": 5,
+    "lifetime_limits": [0.08, 142.0],
+    "sigma_limits": [0.01, 5.0],
+    "offset_window_sigma": 5,
+    "ops_lifetime_threshold": 0.7,
+    "first_pass_options": "RMW",
+    "options": "RM",
+    "width_limits": [0.0, 1.0],
+    "profile_widths": true
+  },
+  "distribution": {
+    "methods": [
+      "nnls_bagged",
+      "maxent"
+    ],
+    "grid": [0.08, 15.0, 160],
+    "bootstrap": 30,
+    "seed": 12345,
+    "regions": [[1.0, 6.0]],
+    "statistics_thresholds": [5000000.0, 10000000.0]
+  },
+  "output": {
+    "directory": "Results",
+    "timestamp": true
+  }
+}

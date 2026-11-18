@@ -1,58 +1,42 @@
-cmake_minimum_required(VERSION 2.6)
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+cmake_minimum_required(VERSION 3.16)
+project(PALS_avalanche LANGUAGES CXX)
 
-#include(JPetFramework-Utilities)
-
-set(projectName PAv.exe)
-set(projectBinary ${projectName}.x)
-
-project(${projectName} CXX) # using only C++
-
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
-
-add_definitions(-std=c++11 -Wall -Wunused-parameter) # using C++11 standard
-
-################################################################################
-# Handling of ROOT 
-################################################################################
-
-## Find CERN ROOT
-# first try to find ROOT 6 or ROOT 5 compiled with CMake
-# if present, such ROOT should be possible to find without explicit setting of any paths
-foreach(mode QUIET REQUIRED)
-  find_package(ROOT 5 ${mode} COMPONENTS
-    Hist
-    Physics
-    RIO
-    Thread
-    Tree
-    )
-  if(ROOT_USE_FILE)
-    include(${ROOT_USE_FILE})
-  endif()
-  if(ROOT_FOUND)
-    break()
-  endif()
-  # if we failed with CMake based find_package, use fallback
-  # root-config version from cmake/fallback/
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/fallback)
-endforeach()
-include_directories(${ROOT_INCLUDE_DIRS})
-add_definitions(${ROOT_DEFINITIONS})
-message(STATUS "ROOT version: ${ROOT_VERSION}")
-if(ROOT_FOUND AND NOT ROOT_VERSION VERSION_LESS "6.0")
-  message(FATAL_ERROR "ROOT 6.0 is not compatible")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_definitions(${ROOT_DEFINITIONS})
+option(PALS_BUILD_GUI "Build the graphical interface PALS_avalanche_gui" ON)
 
-find_package(Boost 1.50.0 REQUIRED COMPONENTS system filesystem)
+find_package(ROOT 6.22 REQUIRED COMPONENTS Hist MathCore Core)
 
-include_directories(${Boost_INCLUDE_DIRS})
-add_definitions(${Boost_DEFINITIONS})
+# ROOT-independent part (config, models, estimates, distribution analysis, text report)
+add_library(pals_core STATIC
+  src/Config.cpp src/Convolution.cpp src/Distribution.cpp src/FormulaModel.cpp src/LifetimeModel.cpp
+  src/ModelSetup.cpp src/Nnls.cpp src/Spectrum.cpp src/TextReport.cpp)
+target_include_directories(pals_core PUBLIC src third_party)
+target_compile_options(pals_core PRIVATE -Wall -Wextra)
 
-file(GLOB SOURCES *.cpp)
-file(GLOB HEADERS *.h)
+# fitting with ROOT, shared by the command-line program and the GUI
+add_library(pals_root STATIC src/FitSession.cpp src/Fitter.cpp src/RootFormula.cpp src/RootIO.cpp)
+target_link_libraries(pals_root PUBLIC pals_core ROOT::Hist ROOT::MathCore ROOT::Core)
+target_compile_options(pals_root PRIVATE -Wall -Wextra)
 
-add_executable(${projectName} ${SOURCES} ${HEADERS} )
-target_link_libraries(${projectName} ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(PALS_avalanche src/main.cpp)
+target_link_libraries(PALS_avalanche PRIVATE pals_root)
+
+if(PALS_BUILD_GUI)
+  if(TARGET ROOT::Gui AND TARGET ROOT::Gpad)
+    add_executable(PALS_avalanche_gui src/gui/main_gui.cpp src/gui/PalsGui.cpp)
+    target_include_directories(PALS_avalanche_gui PRIVATE src/gui)
+    target_compile_definitions(PALS_avalanche_gui PRIVATE PALS_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources")
+    target_link_libraries(PALS_avalanche_gui PRIVATE pals_root ROOT::Gui ROOT::Gpad)
+    target_compile_options(PALS_avalanche_gui PRIVATE -Wall -Wextra)
+  else()
+    message(WARNING "ROOT was built without its GUI libraries: PALS_avalanche_gui is not built")
+  endif()
+endif()
+
+add_executable(test_model tests/test_model.cpp)
+target_link_libraries(test_model PRIVATE pals_core)

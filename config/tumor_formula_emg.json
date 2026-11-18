@@ -1,0 +1,52 @@
+{
+  "description": "Same model without numerical convolution: the resolution is in the formula, pals_emg(x, sigma, t0, tau) = exponential convolved with a Gaussian (unit area); x = t.",
+  "input": {
+    "format": "times",
+    "column": 0
+  },
+  "histogram": {
+    "bin_width": 0.02,
+    "range": [0, 120]
+  },
+  "estimation": {
+    "min_counts_first_bin": 8,
+    "min_counts_last_bin": 8,
+    "background": {
+      "side": "right",
+      "bins": 100,
+      "skip_bins": 30,
+      "n_sigma": 3
+    },
+    "fit_start_fraction": 0.3,
+    "fit_end": 40
+  },
+  "model": {
+    "type": "formula",
+    "formula": "[A]*([I1]*pals_emg(x,[sigma],[t0],[tau1]) + 0.1*pals_emg(x,[sigma],[t0],0.374) + [I3]*pals_emg(x,[sigma],[t0],[tau3]) + (0.9-[I1]-[I3])*pals_emg(x,[sigma],[t0],[tau4]))",
+    "convolve": false,
+    "parameters": {
+      "A": {"value": "estimate:area", "comment": "number of counts"},
+      "I1": {"value": 0.3, "limits": [0, 0.9]},
+      "I3": {"value": 0.5, "limits": [0, 0.9]},
+      "tau1": {"value": 0.125, "limits": [0.08, 142], "stage": 1},
+      "tau3": {"value": 0.3, "limits": [0.08, 142], "stage": 1},
+      "tau4": {"value": 2.0, "limits": [0.08, 142], "stage": 1},
+      "sigma": {"value": "estimate:sigma", "limits": [0.01, 5]},
+      "t0": {"value": "estimate:peak_position"}
+    }
+  },
+  "fit": {
+    "iterations": 3,
+    "partial_variation_percent": 5,
+    "lifetime_limits": [0.08, 142.0],
+    "sigma_limits": [0.01, 5.0],
+    "offset_window_sigma": 5,
+    "ops_lifetime_threshold": 0.7,
+    "first_pass_options": "RMW",
+    "options": "RM"
+  },
+  "output": {
+    "directory": "Results",
+    "timestamp": true
+  }
+}

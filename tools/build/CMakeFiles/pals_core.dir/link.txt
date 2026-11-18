@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpals_core.a CMakeFiles/pals_core.dir/src/Config.cpp.o CMakeFiles/pals_core.dir/src/Convolution.cpp.o CMakeFiles/pals_core.dir/src/Distribution.cpp.o CMakeFiles/pals_core.dir/src/FormulaModel.cpp.o CMakeFiles/pals_core.dir/src/LifetimeModel.cpp.o CMakeFiles/pals_core.dir/src/ModelSetup.cpp.o CMakeFiles/pals_core.dir/src/Nnls.cpp.o CMakeFiles/pals_core.dir/src/Spectrum.cpp.o CMakeFiles/pals_core.dir/src/TextReport.cpp.o
+/usr/bin/ranlib libpals_core.a

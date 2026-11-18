@@ -1,0 +1,7 @@
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/pals_core.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/pals_root.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/PALS_avalanche.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/PALS_avalanche_gui.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/test_model.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/edit_cache.dir
+/home/ultramarynowyb/PALS/PALS_avalanche_refactor/build/CMakeFiles/rebuild_cache.dir

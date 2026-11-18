@@ -1,0 +1,55 @@
+PALS_avalanche - discrete fit of a positron annihilation lifetime spectrum
+Date:   2026-11-17 11:09:44
+Data:   ../ColonCancer_AB_20122018.dat_TDiff.dat
+Config: ../config/tumor.json
+
+=== Preliminary estimates ===
+Peak:              bin 307 (6.15 ns), 20200 counts
+Spectrum:          bin 0 (0.01 ns) .. bin 5428 (108.57 ns)
+Background:        21.58 +- 0.449732 counts/bin, from bin 5298 (105.97 ns) .. bin 5397 (107.95 ns)
+Fit range:         bin 294 (5.89 ns) .. bin 2000 (40.01 ns)
+Area:              707949 counts above background
+Sigma (left HWHM): 0.164124 ns
+
+=== Fit ===
+Range: 5.89 .. 40.01 ns (1707 bins)
+  stage 0  options RMW     status 4000  chi2/ndf 6694253/1701 = 3935.5
+  stage 1  options RM      status 4000  chi2/ndf 1998.082/1698 = 1.1767
+  stage 2  options RM      status 4000  chi2/ndf 1998.082/1698 = 1.1767
+  stage 3  options RM      status 4000  chi2/ndf 1998.082/1698 = 1.1767
+Chi2 / NDF:        1998.082 / 1698 = 1.1767
+p-value:           5.166e-07
+Minimizer status:  4000   covariance matrix status: 3 (3 = accurate)
+WARNING: the fit did not converge properly
+
+=== Results ===
+Background [counts/bin]  20.2308 +- 0.0317   (estimate 21.58 +- 0.45)
+Area [counts]            709382.87 +- 890
+
+Resolution components
+#   sigma [ns]              FWHM [ns]               t0 [ns]                 fraction                  modes
+1   0.11515 +- 0.0012       0.27116 +- 0.0028       6.00727 +- 0.0019       1 +- 0                    sigma free, fraction free
+
+Lifetime components (sorted by lifetime; # = position in the config)
+#   tau [ns]                  intensity [%]             modes
+3   0.16465 +- 0.018          20.155 +- 2.5             tau free, I free
+2   0.374 +- 0                10 +- 0                   tau fixed, I fixed
+1   0.43843 +- 0.013          51.748 +- 2.3             tau free, I free
+4   1.9759 +- 0.021           18.097 +- 0.31            tau free, I free
+Sum of intensities: 100 %
+Intensity errors are propagated with the full covariance matrix.
+
+=== All fit parameters ===
+0   background                       20.2308        0.0317   [20.231, 22.929]
+1   area                            709382.9           890   no limits
+2   sigma_1                        0.1151506       0.00117   [0.01, 5]
+3   t0_1                            6.007267       0.00195   [5.65, 6.65]
+4   res_1_unused                           0             0   fixed
+5   tau_1                          0.4384266        0.0126   [0.08, 142]
+6   int_1_r                        0.7989234        0.0034   [0, 1]
+7   tau_2                              0.374             0   fixed
+8   int_2_intensity                      0.1             0   fixed
+9   tau_3                          0.1646491         0.018   [0.08, 142]
+10  int_3_phi1                     0.3713995        0.0563   [0, 1.5708]
+11  tau_4                           1.975926        0.0211   [0.08, 142]
+12  int_4_unused                           0             0   fixed
